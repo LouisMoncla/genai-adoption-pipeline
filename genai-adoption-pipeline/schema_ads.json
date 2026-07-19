@@ -1,0 +1,202 @@
+[
+  {
+    "name": "duplicate_group",
+    "type": "STRING"
+  },
+  {
+    "name": "title",
+    "type": "STRING"
+  },
+  {
+    "name": "url",
+    "type": "STRING"
+  },
+  {
+    "name": "tst_created",
+    "type": "TIMESTAMP"
+  },
+  {
+    "name": "tst_deleted",
+    "type": "TIMESTAMP"
+  },
+  {
+    "name": "duration",
+    "type": "FLOAT"
+  },
+  {
+    "name": "is_temporary",
+    "type": "BOOLEAN"
+  },
+  {
+    "name": "has_homeoffice",
+    "type": "BOOLEAN"
+  },
+  {
+    "fields": [
+      {
+        "name": "minimum",
+        "type": "INTEGER"
+      },
+      {
+        "name": "maximum",
+        "type": "INTEGER"
+      }
+    ],
+    "name": "work_quota",
+    "type": "RECORD"
+  },
+  {
+    "name": "location",
+    "type": "STRING"
+  },
+  {
+    "fields": [
+      {
+        "name": "country",
+        "type": "STRING"
+      },
+      {
+        "name": "province",
+        "type": "STRING"
+      },
+      {
+        "name": "district",
+        "type": "INTEGER"
+      },
+      {
+        "name": "postal_code",
+        "type": "STRING"
+      }
+    ],
+    "mode": "REPEATED",
+    "name": "locations",
+    "type": "RECORD"
+  },
+  {
+    "name": "content_clean",
+    "type": "STRING"
+  },
+  {
+    "name": "origin",
+    "type": "STRING"
+  },
+  {
+    "fields": [
+      {
+        "name": "id",
+        "type": "INTEGER"
+      },
+      {
+        "name": "name",
+        "type": "STRING"
+      },
+      {
+        "name": "bfs_uid",
+        "type": "STRING"
+      },
+      {
+        "name": "crn",
+        "type": "STRING"
+      },
+      {
+        "fields": [
+          {
+            "name": "id",
+            "type": "INTEGER"
+          },
+          {
+            "name": "name",
+            "type": "STRING"
+          },
+          {
+            "name": "type",
+            "type": "STRING"
+          }
+        ],
+        "mode": "REPEATED",
+        "name": "metadata",
+        "type": "RECORD"
+      },
+      {
+        "fields": [
+          {
+            "name": "country",
+            "type": "STRING"
+          },
+          {
+            "name": "city",
+            "type": "STRING"
+          },
+          {
+            "name": "postal_code",
+            "type": "STRING"
+          },
+          {
+            "name": "street",
+            "type": "STRING"
+          },
+          {
+            "name": "is_primary",
+            "type": "BOOLEAN"
+          }
+        ],
+        "mode": "REPEATED",
+        "name": "addresses",
+        "type": "RECORD"
+      },
+      {
+        "fields": [
+          {
+            "name": "id",
+            "type": "INTEGER"
+          },
+          {
+            "name": "name",
+            "type": "STRING"
+          },
+          {
+            "fields": [
+              {
+                "name": "minimum",
+                "type": "INTEGER"
+              },
+              {
+                "name": "maximum",
+                "type": "INTEGER"
+              }
+            ],
+            "name": "employees",
+            "type": "RECORD"
+          }
+        ],
+        "name": "size",
+        "type": "RECORD"
+      },
+      {
+        "name": "url",
+        "type": "STRING"
+      },
+      {
+        "name": "is_recruiter",
+        "type": "BOOLEAN"
+      }
+    ],
+    "name": "company",
+    "type": "RECORD"
+  },
+  {
+    "fields": [
+      {
+        "name": "id",
+        "type": "STRING"
+      },
+      {
+        "name": "name",
+        "type": "STRING"
+      }
+    ],
+    "mode": "REPEATED",
+    "name": "occupations",
+    "type": "RECORD"
+  }
+]
