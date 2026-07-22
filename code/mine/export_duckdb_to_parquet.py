@@ -246,7 +246,15 @@ def _connect():
     con = duckdb.connect(SCRATCH_DB)
     con.execute(f"ATTACH '{DB_PATH}' AS src (READ_ONLY)")
     print("  (connected.)", flush=True)
-    con.execute("SET memory_limit='600MB'")
+    # 600MB was set cautiously back when the OLD monolithic-query design was
+    # OOMing (design history point 2). It turned out too thin for Step B's
+    # monthly joins: a real run OOM'd at 572/572.2MB on 2025-07 — and doing
+    # so on the very first month tried right after a fresh reconnect ruled
+    # out connection-buildup as the cause (see MONTHS_PER_CONNECTION). Some
+    # months are just marginally heavier than others. There's real headroom
+    # (~1.68GB free out of 7.7GB total, checked live) so raised to 1GB,
+    # still leaving a safety margin for the OS/other processes.
+    con.execute("SET memory_limit='1GB'")
     temp_dir = OUT_DIR / "_duckdb_tmp"
     temp_dir.mkdir(parents=True, exist_ok=True)
     con.execute(f"SET temp_directory='{str(temp_dir).replace(chr(92), '/')}'")
@@ -271,16 +279,30 @@ def build_agg_tables(con):
         print("  Done.", flush=True)
 
 
+MONTHS_PER_CONNECTION = 6
+
+
 def build_prejoined_table(con):
     """Step B — see design history point 4. Does the 4 expensive LEFT JOINs
     once per month instead of once per day. Safe to interrupt: each month's
     INSERT is one all-or-nothing statement, so re-running just re-checks
-    which months already have rows and skips them."""
+    which months already have rows and skips them.
+
+    Returns the (possibly reconnected) connection — see MONTHS_PER_CONNECTION
+    below. A live run OOM'd 572/572.2MB into month 34/36 despite each
+    individual month comfortably fitting in the same 600MB cap on its own
+    (month 1 of testing took 122s with no memory issue). That matches the
+    exact "memory build-up across iterations within one connection" pattern
+    already diagnosed for the old per-day loop (see DAYS_PER_CONNECTION) —
+    this loop just never got the same periodic-reconnect fix when Step B was
+    added. Fixed here the same way: reconnect every few months so state
+    doesn't accumulate across 36 INSERTs on one connection."""
     existing = {r[0] for r in con.sql("SHOW TABLES").fetchall()}
     if "prejoined" not in existing:
         con.execute(CREATE_PREJOINED_SCHEMA_SQL)
         print("  Created empty `prejoined` table.", flush=True)
 
+    months_done_this_run = 0
     for chunk_start in _month_starts():
         chunk_end = _next_month(chunk_start)
         n_existing = con.sql(
@@ -290,13 +312,21 @@ def build_prejoined_table(con):
         if n_existing > 0:
             print(f"Step B: {chunk_start} already joined ({n_existing:,} rows) — skipping.", flush=True)
             continue
+
+        if months_done_this_run > 0 and months_done_this_run % MONTHS_PER_CONNECTION == 0:
+            con.close()
+            con = _connect()
+
         print(f"Step B: joining {chunk_start} ...", flush=True)
         con.execute(INSERT_PREJOINED_CHUNK_SQL.format(chunk_start=chunk_start, chunk_end=chunk_end))
+        months_done_this_run += 1
         n = con.sql(
             f"SELECT COUNT(*) FROM prejoined WHERE created >= TIMESTAMP '{chunk_start}' "
             f"AND created < TIMESTAMP '{chunk_end}'"
         ).fetchone()[0]
         print(f"  {chunk_start}: {n:,} rows joined.", flush=True)
+
+    return con
 
 
 def _check_existing(out_file: Path) -> int | None:
@@ -342,7 +372,7 @@ def run_all_days():
     # see build_agg_tables docstring for why this matters.
     con = _connect()
     build_agg_tables(con)
-    build_prejoined_table(con)
+    con = build_prejoined_table(con)
 
     for i, day in enumerate(all_days):
         out_file = OUT_DIR / f"x28_ads_{day.isoformat()}.parquet"
@@ -381,7 +411,7 @@ def main():
         year, month, day_num = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
         con = _connect()
         build_agg_tables(con)
-        build_prejoined_table(con)
+        con = build_prejoined_table(con)
         n = export_one_day(con, date(year, month, day_num))
         con.close()
         print(f"{year}-{month:02d}-{day_num:02d}: {n:,} rows", flush=True)
