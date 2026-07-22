@@ -23,37 +23,38 @@ Semantics established via inspection of the actual data (not assumed):
     data_preparation.py's _flatten_and_filter() calls .str.replace(...).str.to_datetime(...)
     on the date column, which requires a String dtype, not a native Timestamp.
 
-Memory design (this machine has only 7.7 GB total RAM, and as little as
-~1.4 GB actually FREE once Chrome/Defender/normal background usage is
-accounted for — checked directly with Get-CimInstance Win32_OperatingSystem):
+Design history (this machine has only 7.7 GB total RAM, and as little as
+~1.1-1.4 GB actually FREE once Chrome/Defender/normal background usage is
+accounted for):
   1. Materialize each one-to-many aggregation (occupations, locations,
      cantons, company metadata) as its own finished table first, via
      CREATE TABLE AS — so DuckDB fully computes and frees each one before
-     starting the next, instead of holding several large hash tables in
-     memory at once. (Fixes: one combined query with 4 CTEs + the join OOM'd
-     immediately.)
-  2. Chunk the actual export by DAY, not year or month. A full month
-     (~150-200K rows) still OOM'd even at an 800MB cap, with usage climbing
-     past 763MB before failing — genuinely more than fits in the memory this
-     machine actually has free. A day (~6K rows on average) is roughly 30x
-     smaller.
-  3. Open a FRESH DuckDB connection for every single day, inside one
-     long-running Python process (not a fresh OS process per day — process
-     spawn overhead across ~1,090 days added up too much). Evidence for why
-     a fresh connection matters: an earlier attempt reused one connection
-     across many months and OOM'd on the batch immediately AFTER a
-     similar-sized batch had just succeeded — memory was building up across
-     iterations within that one connection, not that any single batch was
-     inherently too big.
-  4. A separate, harder-to-explain failure mode: several attempts were
-     silently killed with no Python traceback at all — not a graceful
-     DuckDB OOM, just gone. This happened consistently within about a
-     minute, regardless of memory_limit (tried 3GB, 800MB — same result),
-     and did NOT happen when a run was started in the foreground first. The
-     working theory is some environment-level watchdog killing long
-     silent background processes. Printing progress after every single day
-     (flush=True) keeps stdout active throughout, which avoids the pattern
-     observed so far.
+     starting the next. Kept throughout every version of this script.
+  2. Tried year, then month, then day chunking via WHERE date filters, then
+     tried ONE single unpartitioned pass instead (theorizing that WHERE
+     filters on an unordered table cost as much as a full scan anyway). The
+     single pass got killed by something outside this script's control
+     (not a DuckDB OOM — confirmed by real, growing disk-spill progress
+     each time, 1.8-2.2GB, right up until the kill) after a few minutes,
+     every attempt, losing 100% of progress every time since a single COPY
+     is all-or-nothing.
+  3. Landed here: per-day chunking (~6K rows/day on average — small and
+     fast), because it's the only approach that produces genuinely DURABLE
+     partial progress — each completed day is a real, permanently-valid
+     Parquet file, so a kill only costs the one day in flight, not
+     everything. A manual single-day test did complete successfully
+     end-to-end, confirming day-sized queries finish in reasonable time
+     once connected. Connections are reused across a batch of days (not
+     recreated per day) because opening the 23GB read-only ATTACH is itself
+     slow (~2 min the first time; much faster once the OS file cache is
+     warm) — but reset periodically (see DAYS_PER_CONNECTION) because an
+     earlier attempt reusing one connection for a whole month-sized loop
+     OOM'd right after a similar-sized batch had just succeeded, suggesting
+     memory build-up across iterations within one connection.
+  Practically: this script is meant to be re-run repeatedly. Every rerun
+  skips whatever days are already done (verified valid, not just present —
+  see _check_existing) and only works on what's left. Progress accumulates
+  across retries even if most individual runs get killed partway through.
   Output is written to data/processed/, not data/raw/, because this Parquet
   is a derived/transformed product, not the original source file (the
   original x28_dump.duckdb in data/raw/ is untouched throughout).
@@ -68,6 +69,31 @@ accounted for — checked directly with Get-CimInstance Win32_OperatingSystem):
   agg_* tables live only in the scratch db, and there is no code path left
   that can write to the raw file.
 
+  4. (2026-07-22) Profiled WHY per-day export was taking ~90s/day for as
+     little as ~6K rows: a plain date-filtered COUNT on `advertisements`
+     took ~0.1s, and adding the `advertisement_details` join only brought it
+     to ~0.6s — so neither of those was the cost. That leaves the four LEFT
+     JOINs against agg_occ/agg_loc/agg_cantons/agg_meta, which are
+     multi-million-row tables that don't change but were being rebuilt into
+     join structures from scratch on EVERY one of the 1,096 day queries.
+     Disk-spill usage was ~0MB throughout, confirming this was never a
+     memory problem — the 600MB cap was never actually binding, so freeing
+     RAM would not have helped.
+     Added Step B: do those 4 joins ONCE PER MONTH (36 times) instead of
+     once per day (1,096 times), writing the joined-but-not-yet-day-filtered
+     result into a new `prejoined` table. Each day's export (Step C) then
+     becomes a cheap single-table filter + COPY, no more joins at export
+     time. Chunked by month rather than done in one pass, specifically
+     because the one-single-pass attempt in design point 2 above is exactly
+     this same join and got killed by something external after a few
+     minutes every time — a month-sized chunk is ~30x smaller and, per the
+     per-day timing evidence, should reliably finish well inside that
+     window. Each month's INSERT is one all-or-nothing statement (same
+     durability property as the day-level COPY), so a rerun can safely
+     check "does `prejoined` already have rows for this month?" to skip
+     completed months. Already-exported days are untouched by this change —
+     Step C still skips any day that already has a valid Parquet file.
+
 Run with the pipeline's venv (needs duckdb, installed separately — see
 requirements.txt note).
 """
@@ -80,15 +106,8 @@ import duckdb
 
 DB_PATH = "C:/Users/Louis/Documents/Internship/data/raw/x28_dump.duckdb"
 OUT_DIR = Path("C:/Users/Louis/Documents/Internship/data/processed/x28_parquet")
-# A persistent scratch FILE, not ":memory:" — survives a crash so Step A
-# (which scans tables up to 77M rows) doesn't need to be redone on every
-# retry. Disposable derived working state, never the raw data.
 SCRATCH_DB = str(OUT_DIR / "_scratch.duckdb")
 
-# The x28 dataset covers Dec 2022 - Nov 2025 (confirmed via
-# SELECT MIN(created), MAX(created) FROM advertisements earlier). Using a
-# slightly wider window is harmless — days with zero matching rows just
-# produce a 0-row Parquet file quickly.
 START_DATE = date(2022, 12, 1)
 END_DATE = date(2025, 11, 30)
 
@@ -100,9 +119,20 @@ def _daterange():
         d += timedelta(days=1)
 
 
-# --- Step A: materialize each one-to-many aggregation as its own table -----
-# Reads from src.<table> (the ATTACHed, read-only raw database) and writes
-# into the scratch database — never into src itself.
+def _month_starts():
+    y, m = START_DATE.year, START_DATE.month
+    while (y, m) <= (END_DATE.year, END_DATE.month):
+        yield date(y, m, 1)
+        m += 1
+        if m > 12:
+            m = 1
+            y += 1
+
+
+def _next_month(d: date) -> date:
+    return date(d.year + 1, 1, 1) if d.month == 12 else date(d.year, d.month + 1, 1)
+
+
 BUILD_AGG_TABLES_SQL = """
 CREATE OR REPLACE TABLE agg_occ AS
     SELECT advertisement_id,
@@ -134,13 +164,16 @@ CREATE OR REPLACE TABLE agg_meta AS
     GROUP BY advertisement_id;
 """
 
-# --- Step B: single-day join against the pre-built aggregate tables --------
-EXPORT_DAY_SQL = """
-COPY (
+# Shared SELECT for building `prejoined` — same 4 LEFT JOINs as the old
+# per-day query, but run once per month (see design history point 4) and
+# keeping the raw `created` timestamp column (not just the stringified
+# tst_created) so Step C can still filter by exact day afterward.
+_PREJOINED_SELECT = """
   SELECT
     a.duplicategroup AS duplicate_group,
     d.title AS title,
     a.url AS url,
+    a.created AS created,
     strftime(a.created, '%Y-%m-%d %H:%M:%S.%f') AS tst_created,
     strftime(a.deleted, '%Y-%m-%d %H:%M:%S.%f') AS tst_deleted,
     CAST(NULL AS DOUBLE) AS duration,
@@ -174,21 +207,46 @@ COPY (
   LEFT JOIN agg_loc loc ON a.id = loc.advertisement_id
   LEFT JOIN agg_cantons cantons ON a.id = cantons.advertisement_id
   LEFT JOIN agg_meta meta ON a.id = meta.advertisement_id
-  WHERE CAST(a.created AS DATE) = DATE '{day}'
+"""
+
+CREATE_PREJOINED_SCHEMA_SQL = f"CREATE TABLE prejoined AS {_PREJOINED_SELECT} WHERE FALSE"
+
+INSERT_PREJOINED_CHUNK_SQL = (
+    f"INSERT INTO prejoined {_PREJOINED_SELECT}"
+    " WHERE a.created >= TIMESTAMP '{chunk_start}' AND a.created < TIMESTAMP '{chunk_end}'"
+    # No ORDER BY here on purpose: sorting a whole month (with the large
+    # content_clean text + nested struct/list columns) needs more memory
+    # than the 600MB cap allows and OOM'd in testing. Row-group pruning on
+    # Step C's per-day filter is a bit less precise without it (rows are in
+    # month-chunk order, not exact date order), but chunking by month still
+    # keeps each day's filter scan cheap since it only has to scan ~1
+    # month's worth of rows instead of the whole table.
+)
+
+# Step C: now a plain filter over the already-joined `prejoined` table — no
+# more joins at export time, which is what makes this step fast.
+EXPORT_DAY_SQL = """
+COPY (
+  SELECT duplicate_group, title, url, tst_created, tst_deleted, duration, is_temporary,
+         has_homeoffice, work_quota, location, locations, cantons_bonus, content_clean,
+         origin, company, occupations
+  FROM prejoined
+  WHERE CAST(created AS DATE) = DATE '{day}'
 ) TO '{out_file}' (FORMAT PARQUET)
 """
 
 
 def _connect():
-    # ATTACHing the 23GB raw file has taken up to ~2 minutes under this
-    # machine's memory pressure, with zero output in between — printing
-    # before/after keeps stdout active through that gap instead of going
-    # silent for the whole window.
+    # Printing before/after keeps stdout active during the connect+attach —
+    # every silent multi-minute gap observed so far has ended in an external
+    # kill with no Python traceback; adding these prints back in (they were
+    # accidentally dropped in an earlier rewrite) measurably correlates with
+    # runs surviving longer.
     print("  (opening connection + attaching source database...)", flush=True)
     con = duckdb.connect(SCRATCH_DB)
     con.execute(f"ATTACH '{DB_PATH}' AS src (READ_ONLY)")
     print("  (connected.)", flush=True)
-    con.execute("SET memory_limit='600MB'")  # comfortably under the ~1.4GB actually free
+    con.execute("SET memory_limit='600MB'")
     temp_dir = OUT_DIR / "_duckdb_tmp"
     temp_dir.mkdir(parents=True, exist_ok=True)
     con.execute(f"SET temp_directory='{str(temp_dir).replace(chr(92), '/')}'")
@@ -197,9 +255,13 @@ def _connect():
     return con
 
 
-def build_agg_tables():
-    """Step A, run once. Cached in the persistent scratch db across process runs."""
-    con = _connect()
+def build_agg_tables(con):
+    """Takes an already-open connection — does NOT open its own. An earlier
+    version opened a separate connection just for this check, then closed it
+    and opened another for the day loop: two full connect+attach cycles
+    (each slow under this machine's memory pressure) before any real query
+    ran. That doubled overhead lines up with runs consistently dying right
+    as the first day query started. Reusing one connection removes that."""
     existing = {r[0] for r in con.sql("SHOW TABLES").fetchall()}
     if {"agg_occ", "agg_loc", "agg_cantons", "agg_meta"}.issubset(existing):
         print("Step A: agg_* tables already exist — skipping.", flush=True)
@@ -207,12 +269,39 @@ def build_agg_tables():
         print("Step A: materializing occupation/location/canton/company-metadata aggregate tables...", flush=True)
         con.execute(BUILD_AGG_TABLES_SQL)
         print("  Done.", flush=True)
-    con.close()
+
+
+def build_prejoined_table(con):
+    """Step B — see design history point 4. Does the 4 expensive LEFT JOINs
+    once per month instead of once per day. Safe to interrupt: each month's
+    INSERT is one all-or-nothing statement, so re-running just re-checks
+    which months already have rows and skips them."""
+    existing = {r[0] for r in con.sql("SHOW TABLES").fetchall()}
+    if "prejoined" not in existing:
+        con.execute(CREATE_PREJOINED_SCHEMA_SQL)
+        print("  Created empty `prejoined` table.", flush=True)
+
+    for chunk_start in _month_starts():
+        chunk_end = _next_month(chunk_start)
+        n_existing = con.sql(
+            f"SELECT COUNT(*) FROM prejoined WHERE created >= TIMESTAMP '{chunk_start}' "
+            f"AND created < TIMESTAMP '{chunk_end}'"
+        ).fetchone()[0]
+        if n_existing > 0:
+            print(f"Step B: {chunk_start} already joined ({n_existing:,} rows) — skipping.", flush=True)
+            continue
+        print(f"Step B: joining {chunk_start} ...", flush=True)
+        con.execute(INSERT_PREJOINED_CHUNK_SQL.format(chunk_start=chunk_start, chunk_end=chunk_end))
+        n = con.sql(
+            f"SELECT COUNT(*) FROM prejoined WHERE created >= TIMESTAMP '{chunk_start}' "
+            f"AND created < TIMESTAMP '{chunk_end}'"
+        ).fetchone()[0]
+        print(f"  {chunk_start}: {n:,} rows joined.", flush=True)
 
 
 def _check_existing(out_file: Path) -> int | None:
-    """Returns row count if out_file is a valid, already-complete export;
-    None if it needs (re-)exporting (deletes it first if corrupt)."""
+    """Row count if out_file is a valid, complete export; None if it needs
+    (re-)exporting (deletes it first if corrupt/truncated)."""
     if not out_file.exists():
         return None
     try:
@@ -227,89 +316,72 @@ def _check_existing(out_file: Path) -> int | None:
 
 
 def export_one_day(con, day: date) -> int:
-    """Step B for a single day, using an already-open connection passed in by
-    the caller (see run_all_days — connections are reused across a batch of
-    days, not recreated per day, because opening the 23GB read-only attach
-    is itself slow on this memory-pressured machine: ~2 minutes just to
-    connect in one test, far more than the query itself needed)."""
     day_str = day.isoformat()
     out_file = OUT_DIR / f"x28_ads_{day_str}.parquet"
-
-    cached = _check_existing(out_file)
-    if cached is not None:
-        return cached
-
-    # Write to a temp filename, rename only after a successful COPY — a crash
-    # mid-write must never leave a broken file at the real output name (this
-    # happened once with the month-based version of this script).
     tmp_file = out_file.with_suffix(".parquet.inprogress")
+    # Write to a temp filename, rename only after a successful COPY — a crash
+    # mid-write must never leave a broken file at the real output name.
     con.execute(EXPORT_DAY_SQL.format(day=day_str, out_file=str(tmp_file).replace("\\", "/")))
     n = con.sql(f"SELECT COUNT(*) FROM read_parquet('{str(tmp_file).replace(chr(92), '/')}')").fetchone()[0]
     tmp_file.replace(out_file)  # atomic on the same volume
     return n
 
 
-# How many days to process per connection before closing and reopening it.
-# Balances two failure modes seen during testing: (a) a fresh connection per
-# day is safe against memory build-up but each connect+attach took ~2 minutes
-# under this machine's memory pressure — far too slow across ~1,090 days;
-# (b) one connection reused for a whole month-sized loop (48 iterations)
-# OOM'd right after a same-sized batch had just succeeded. Day-sized batches
-# are roughly 30x smaller than month-sized ones, so resetting every 30 days
-# (instead of never) should land well on the safe side of that boundary
-# while cutting connection overhead ~30x versus one-per-day.
 DAYS_PER_CONNECTION = 30
 
 
 def run_all_days():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    build_agg_tables()
 
     all_days = list(_daterange())
     total_rows = 0
     days_with_data = 0
-    con = None
+    days_done_this_run = 0
+
+    # One connection covers Step A AND the first DAYS_PER_CONNECTION days —
+    # see build_agg_tables docstring for why this matters.
+    con = _connect()
+    build_agg_tables(con)
+    build_prejoined_table(con)
 
     for i, day in enumerate(all_days):
-        # Skip the connection dance entirely for days already done — no need
-        # to even open a connection just to check a cached result.
         out_file = OUT_DIR / f"x28_ads_{day.isoformat()}.parquet"
         cached = _check_existing(out_file)
-        was_cached = cached is not None
-        if was_cached:
+        if cached is not None:
             n = cached
         else:
-            if con is None or i % DAYS_PER_CONNECTION == 0:
-                if con is not None:
-                    con.close()
+            if days_done_this_run > 0 and days_done_this_run % DAYS_PER_CONNECTION == 0:
+                con.close()
                 con = _connect()
             n = export_one_day(con, day)
+            days_done_this_run += 1
+            print(f"  [{i+1}/{len(all_days)}] {day.isoformat()}: {n:,} rows", flush=True)
 
         total_rows += n
         if n > 0:
             days_with_data += 1
 
-        if (i + 1) % 20 == 0 or (not was_cached and n > 0):
-            print(f"  [{i+1}/{len(all_days)}] {day.isoformat()}: {n:,} rows "
-                  f"(running total {total_rows:,})", flush=True)
+    con.close()
 
-    if con is not None:
-        con.close()
-
-    print(f"Done. {days_with_data} days had data. Total exported rows: {total_rows:,}", flush=True)
+    print(f"Run finished. {days_with_data} days had data so far. "
+          f"Total rows across all completed days: {total_rows:,}. "
+          f"({days_done_this_run} days newly processed this run.)", flush=True)
 
     con = _connect()
     expected = con.sql("SELECT COUNT(*) FROM src.advertisements").fetchone()[0]
     con.close()
     print(f"Sanity check — advertisements table row count: {expected:,} "
-          f"({'MATCH' if expected == total_rows else 'MISMATCH — investigate'})", flush=True)
+          f"({'MATCH — all done!' if expected == total_rows else 'still incomplete, rerun to continue'})",
+          flush=True)
 
 
 def main():
     if len(sys.argv) == 4:
-        # Single-day mode, for manual testing: python export_....py 2023 1 15
+        # Manual single-day test: python export_....py 2023 1 15
         year, month, day_num = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
         con = _connect()
+        build_agg_tables(con)
+        build_prejoined_table(con)
         n = export_one_day(con, date(year, month, day_num))
         con.close()
         print(f"{year}-{month:02d}-{day_num:02d}: {n:,} rows", flush=True)

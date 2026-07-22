@@ -1,0 +1,654 @@
+{
+  "keywords": [
+    {
+      "keyword": "ChatGPT",
+      "group": 1,
+      "source": "St",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "ChatGPT",
+        "de": "ChatGPT",
+        "fr": "ChatGPT",
+        "it": "ChatGPT"
+      }
+    },
+    {
+      "keyword": "Generative artificial intelligence",
+      "group": 1,
+      "source": "St",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Generative artificial intelligence",
+        "de": "Generative künstliche Intelligenz",
+        "fr": "Intelligence artificielle générative",
+        "it": "Intelligenza artificiale generativa"
+      }
+    },
+    {
+      "keyword": "Microsoft Copilot",
+      "group": 1,
+      "source": "St",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Microsoft Copilot",
+        "de": "Microsoft Copilot",
+        "fr": "Microsoft Copilot",
+        "it": "Microsoft Copilot"
+      }
+    },
+    {
+      "keyword": "Multimodal models",
+      "group": 1,
+      "source": "St",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Multimodal models",
+        "de": "Multimodale Modelle",
+        "fr": "Modèles multimodaux",
+        "it": "Modelli multimodali"
+      }
+    },
+    {
+      "keyword": "Prompt engineering",
+      "group": 1,
+      "source": "St",
+      "dhs_rate": 1.98,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Prompt engineering",
+        "de": "Prompt-Entwickler",
+        "fr": "Ingénierie des prompts",
+        "it": "Ingegneria dei prompt"
+      }
+    },
+    {
+      "keyword": "Retrieval augmented generation",
+      "group": 1,
+      "source": "St",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Retrieval augmented generation",
+        "de": "Abrufgestützte Generierung",
+        "fr": "Génération augmentée par récupération",
+        "it": "Generazione aumentata dal recupero"
+      }
+    },
+    {
+      "keyword": "Azure OpenAI",
+      "group": 1,
+      "source": "H&L",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Azure OpenAI",
+        "de": "Azure OpenAI",
+        "fr": "Azure OpenAI",
+        "it": "Azure OpenAI"
+      }
+    },
+    {
+      "keyword": "Gen AI",
+      "group": 1,
+      "source": "H&L",
+      "dhs_rate": 1.98,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Gen AI",
+        "de": "Gen KI",
+        "fr": "IA générative",
+        "it": "IA generativa"
+      }
+    },
+    {
+      "keyword": "Generative AI",
+      "group": 1,
+      "source": "H&L",
+      "dhs_rate": 1.96,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Generative AI",
+        "de": "Generative KI",
+        "fr": "IA générative",
+        "it": "IA generativa"
+      }
+    },
+    {
+      "keyword": "LangChain",
+      "group": 1,
+      "source": "H&L",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "LangChain",
+        "de": "LangChain",
+        "fr": "LangChain",
+        "it": "LangChain"
+      }
+    },
+    {
+      "keyword": "Large language model",
+      "group": 1,
+      "source": "H&L",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Large language model",
+        "de": "Großes Sprachmodell",
+        "fr": "Grand modèle de langage",
+        "it": "Modello linguistico di grandi dimensioni"
+      }
+    },
+    {
+      "keyword": "LlamaIndex",
+      "group": 1,
+      "source": "H&L",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "LlamaIndex",
+        "de": "LlamaIndex",
+        "fr": "LlamaIndex",
+        "it": "LlamaIndex"
+      }
+    },
+    {
+      "keyword": "Pinecone",
+      "group": 1,
+      "source": "H&L",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Pinecone",
+        "de": "Pinecone",
+        "fr": "Pinecone",
+        "it": "Pinecone"
+      }
+    },
+    {
+      "keyword": "Prompt design",
+      "group": 1,
+      "source": "H&L",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Prompt design",
+        "de": "Prompt-Design",
+        "fr": "Conception de prompts",
+        "it": "Progettazione di prompt"
+      }
+    },
+    {
+      "keyword": "RAG",
+      "group": 1,
+      "source": "H&L",
+      "dhs_rate": 1.99,
+      "avg_ratio": null,
+      "forms": {
+        "en": "RAG",
+        "de": "RAG",
+        "fr": "RAG",
+        "it": "RAG"
+      }
+    },
+    {
+      "keyword": "Vector database",
+      "group": 1,
+      "source": "H&L",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Vector database",
+        "de": "Vektordatenbank",
+        "fr": "Base de données vectorielles",
+        "it": "Banca dati vettoriale"
+      }
+    },
+    {
+      "keyword": "Weaviate",
+      "group": 1,
+      "source": "H&L",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Weaviate",
+        "de": "Weaviate",
+        "fr": "Weaviate",
+        "it": "Weaviate"
+      }
+    },
+    {
+      "keyword": "AI-Driven Automation",
+      "group": 1,
+      "source": "LLM",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "AI-Driven Automation",
+        "de": "KI-gesteuerte Automatisierung",
+        "fr": "Automatisation basée sur l'IA",
+        "it": "Automazione guidata dall'intelligenza artificiale"
+      }
+    },
+    {
+      "keyword": "Autoencoder",
+      "group": 1,
+      "source": "LLM",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Autoencoder",
+        "de": "Autoencoder",
+        "fr": "Autoencodeur",
+        "it": "Autoencoder"
+      }
+    },
+    {
+      "keyword": "DALL-E",
+      "group": 1,
+      "source": "LLM",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "DALL-E",
+        "de": "DALL-E",
+        "fr": "DALL-E",
+        "it": "DALL-E"
+      }
+    },
+    {
+      "keyword": "Foundation Model",
+      "group": 1,
+      "source": "LLM",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Foundation Model",
+        "de": "Basismodell",
+        "fr": "Modèle de base",
+        "it": "Modello di base"
+      }
+    },
+    {
+      "keyword": "GitHub Copilot",
+      "group": 1,
+      "source": "LLM",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "GitHub Copilot",
+        "de": "GitHub Copilot",
+        "fr": "GitHub Copilot",
+        "it": "GitHub Copilot"
+      }
+    },
+    {
+      "keyword": "Google Gemini",
+      "group": 1,
+      "source": "LLM",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Google Gemini",
+        "de": "Google Gemini",
+        "fr": "Google Gemini",
+        "it": "Google Gemini"
+      }
+    },
+    {
+      "keyword": "Google Vertex AI",
+      "group": 1,
+      "source": "LLM",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Google Vertex AI",
+        "de": "Google Vertex AI",
+        "fr": "Google Vertex AI",
+        "it": "Google Vertex AI"
+      }
+    },
+    {
+      "keyword": "LLMOps",
+      "group": 1,
+      "source": "LLM",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "LLMOps",
+        "de": "LLMOps",
+        "fr": "LLMOps",
+        "it": "LLMOps"
+      }
+    },
+    {
+      "keyword": "Midjourney",
+      "group": 1,
+      "source": "LLM",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Midjourney",
+        "de": "Midjourney",
+        "fr": "Midjourney",
+        "it": "Midjourney"
+      }
+    },
+    {
+      "keyword": "Multimodal AI",
+      "group": 1,
+      "source": "LLM",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Multimodal AI",
+        "de": "Multimodale KI",
+        "fr": "IA multimodale",
+        "it": "IA multimodale"
+      }
+    },
+    {
+      "keyword": "OpenAI",
+      "group": 1,
+      "source": "LLM",
+      "dhs_rate": 1.98,
+      "avg_ratio": null,
+      "forms": {
+        "en": "OpenAI",
+        "de": "OpenAI",
+        "fr": "OpenAI",
+        "it": "OpenAI"
+      }
+    },
+    {
+      "keyword": "Stable Diffusion",
+      "group": 1,
+      "source": "LLM",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Stable Diffusion",
+        "de": "Stable Diffusion",
+        "fr": "Stable Diffusion",
+        "it": "Stable Diffusion"
+      }
+    },
+    {
+      "keyword": "Synthesia",
+      "group": 1,
+      "source": "LLM",
+      "dhs_rate": 2.0,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Synthesia",
+        "de": "Synthesia",
+        "fr": "Synthesia",
+        "it": "Synthesia"
+      }
+    },
+    {
+      "keyword": "Copilot",
+      "group": 2,
+      "source": "H&L",
+      "dhs_rate": 1.89,
+      "avg_ratio": 112,
+      "forms": {
+        "en": "Copilot",
+        "de": "Copilot",
+        "fr": "Copilot",
+        "it": "Copilot"
+      }
+    },
+    {
+      "keyword": "LLM",
+      "group": 2,
+      "source": "H&L",
+      "dhs_rate": 1.92,
+      "avg_ratio": 463,
+      "forms": {
+        "en": "LLM",
+        "de": "LLM",
+        "fr": "LLM",
+        "it": "LLM"
+      }
+    },
+    {
+      "keyword": "AI Agent",
+      "group": 2,
+      "source": "LLM",
+      "dhs_rate": 1.78,
+      "avg_ratio": 88,
+      "forms": {
+        "en": "AI Agent",
+        "de": "KI-Agent",
+        "fr": "Agent IA",
+        "it": "Agente dell'IA"
+      }
+    },
+    {
+      "keyword": "Cohere",
+      "group": 2,
+      "source": "LLM",
+      "dhs_rate": 2.1,
+      "avg_ratio": 35,
+      "forms": {
+        "en": "Cohere",
+        "de": "Cohere",
+        "fr": "Cohere",
+        "it": "Cohere"
+      }
+    },
+    {
+      "keyword": "FAISS",
+      "group": 2,
+      "source": "LLM",
+      "dhs_rate": 1.74,
+      "avg_ratio": 133,
+      "forms": {
+        "en": "FAISS",
+        "de": "FAISS",
+        "fr": "FAISS",
+        "it": "FAISS"
+      }
+    },
+    {
+      "keyword": "Hugging Face",
+      "group": 2,
+      "source": "LLM",
+      "dhs_rate": 1.93,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Hugging Face",
+        "de": "Hugging Face",
+        "fr": "Hugging Face",
+        "it": "Hugging Face"
+      }
+    },
+    {
+      "keyword": "Responsible AI",
+      "group": 2,
+      "source": "LLM",
+      "dhs_rate": 1.95,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Responsible AI",
+        "de": "Verantwortungsvolle KI",
+        "fr": "IA responsable",
+        "it": "IA responsabile"
+      }
+    },
+    {
+      "keyword": "HuggingFace Transformers",
+      "group": 3,
+      "source": "H&L",
+      "dhs_rate": 1.51,
+      "avg_ratio": null,
+      "forms": {
+        "en": "HuggingFace Transformers",
+        "de": "HuggingFace Transformers",
+        "fr": "HuggingFace Transformers",
+        "it": "HuggingFace Transformers"
+      }
+    },
+    {
+      "keyword": "Milvus",
+      "group": 3,
+      "source": "H&L",
+      "dhs_rate": 1.25,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Milvus",
+        "de": "Milvus",
+        "fr": "Milvus",
+        "it": "Milvus"
+      }
+    },
+    {
+      "keyword": "AI Adoption",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": 1.06,
+      "avg_ratio": null,
+      "forms": {
+        "en": "AI Adoption",
+        "de": "KI-Einführung",
+        "fr": "Adoption de l'IA",
+        "it": "Adozione dell'IA"
+      }
+    },
+    {
+      "keyword": "AI Ethics",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": 1.04,
+      "avg_ratio": null,
+      "forms": {
+        "en": "AI Ethics",
+        "de": "KI-Ethik",
+        "fr": "Éthique de l'IA",
+        "it": "Etica dell’intelligenza artificiale"
+      }
+    },
+    {
+      "keyword": "AI-Powered",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": 1.16,
+      "avg_ratio": 458,
+      "forms": {
+        "en": "AI-Powered",
+        "de": "KI-betrieben",
+        "fr": "Alimenté par l'IA",
+        "it": "Alimentato dall'intelligenza artificiale"
+      }
+    },
+    {
+      "keyword": "Conversational AI",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": 1.31,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Conversational AI",
+        "de": "Konversations-KI",
+        "fr": "IA conversationnelle",
+        "it": "IA conversazionale"
+      }
+    },
+    {
+      "keyword": "Embeddings",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": 1.63,
+      "avg_ratio": 665,
+      "forms": {
+        "en": "Embeddings",
+        "de": "Einbettungen",
+        "fr": "Plongements",
+        "it": "Embedding"
+      }
+    },
+    {
+      "keyword": "Explainable AI",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": 1.1,
+      "avg_ratio": 38,
+      "forms": {
+        "en": "Explainable AI",
+        "de": "Erklärbare KI",
+        "fr": "IA explicable",
+        "it": "IA spiegabile"
+      }
+    },
+    {
+      "keyword": "Few-Shot Learning",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": 1.59,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Few-Shot Learning",
+        "de": "Few-Shot-Lernen",
+        "fr": "Apprentissage few-shot",
+        "it": "Apprendimento few-shot"
+      }
+    },
+    {
+      "keyword": "Generative Design",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": 1.13,
+      "avg_ratio": 42,
+      "forms": {
+        "en": "Generative Design",
+        "de": "Generatives Design",
+        "fr": "Conception générative",
+        "it": "Progettazione generativa"
+      }
+    },
+    {
+      "keyword": "Human-in-the-Loop",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": 1.61,
+      "avg_ratio": 154,
+      "forms": {
+        "en": "Human-in-the-Loop",
+        "de": "Human-in-the-Loop",
+        "fr": "Humain dans la boucle",
+        "it": "Human-in-the-Loop"
+      }
+    },
+    {
+      "keyword": "MLOps",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": 1.71,
+      "avg_ratio": null,
+      "forms": {
+        "en": "MLOps",
+        "de": "MLOps",
+        "fr": "MLOps",
+        "it": "MLOps"
+      }
+    },
+    {
+      "keyword": "Text-to-Image",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": 1.67,
+      "avg_ratio": null,
+      "forms": {
+        "en": "Text-to-Image",
+        "de": "Text-zu-Bild",
+        "fr": "Texte en image",
+        "it": "Testo in immagine"
+      }
+    }
+  ]
+}

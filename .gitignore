@@ -1,11 +1,40 @@
+# --- Python ---
 __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
 .ipynb_checkpoints/
+
+# --- R ---
+.Rhistory
+
+# --- Logs ---
+*.log
+
+# --- Virtual environment ---
 venv/
-data/raw/
+
+# --- Data: raw and processed ---
+# Raw source data is large/proprietary and never modified - excluded entirely,
+# except the small hand-verified keyword file, which IS meant to be tracked.
+data/raw/*
+!data/raw/validated_keywords.json
+
+# Processed/exported data is fully regenerable from raw + code - excluded entirely.
 data/processed/
-output/
-outputs/
+
+# --- Any DuckDB database file, wherever it appears ---
+# (belt-and-suspenders alongside the data/ rules above - catches _scratch.duckdb,
+# its .wal companion, and anything similar that shows up elsewhere)
 *.duckdb
+*.duckdb.wal
+
+# --- Pipeline's own generated output ---
+# genai-adoption-pipeline/output/ will fill with regenerable pipeline artefacts
+# (prepared_data/, scored_data/, classified_data/) once real runs happen -
+# except the translation cache, which the README says ships with the repo
+# on purpose (expensive to regenerate, needs internet).
+genai-adoption-pipeline/output/*
+!genai-adoption-pipeline/output/keyword_translations.json
+
+outputs/
