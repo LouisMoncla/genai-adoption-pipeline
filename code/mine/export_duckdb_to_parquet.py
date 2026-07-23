@@ -98,18 +98,33 @@ Run with the pipeline's venv (needs duckdb, installed separately — see
 requirements.txt note).
 """
 
+import os
 import sys
 from datetime import date, timedelta
 from pathlib import Path
 
 import duckdb
 
-DB_PATH = "C:/Users/Louis/Documents/Internship/data/raw/x28_dump.duckdb"
+# Parameterized via env vars (added 2026-07-23, to reuse this same tested
+# script for a second source file - Jeremias shared a Dec 2020-Nov 2022
+# dump to extend the pre-existing Dec 2022-Nov 2025 export). Defaults below
+# exactly match the original hardcoded values, so a plain
+# `python export_duckdb_to_parquet.py` run behaves identically to before -
+# nothing about the tested per-day/per-month logic below changed, only how
+# these constants get their values. OUT_DIR is deliberately NOT
+# parameterized - both source files should land in the same output
+# directory so Phase I sees one continuous set of day-files. SCRATCH_DB
+# name IS parameterized so a second source doesn't reuse (and contaminate)
+# the first one's agg_*/prejoined tables, which are specific to whichever
+# database is ATTACHed as "src".
+DB_PATH = os.environ.get(
+    "EXPORT_DB_PATH", "C:/Users/Louis/Documents/Internship/data/raw/x28_dump.duckdb"
+)
 OUT_DIR = Path("C:/Users/Louis/Documents/Internship/data/processed/x28_parquet")
-SCRATCH_DB = str(OUT_DIR / "_scratch.duckdb")
+SCRATCH_DB = str(OUT_DIR / os.environ.get("EXPORT_SCRATCH_DB_NAME", "_scratch.duckdb"))
 
-START_DATE = date(2022, 12, 1)
-END_DATE = date(2025, 11, 30)
+START_DATE = date.fromisoformat(os.environ.get("EXPORT_START_DATE", "2022-12-01"))
+END_DATE = date.fromisoformat(os.environ.get("EXPORT_END_DATE", "2025-11-30"))
 
 
 def _daterange():
@@ -133,36 +148,49 @@ def _next_month(d: date) -> date:
     return date(d.year + 1, 1, 1) if d.month == 12 else date(d.year, d.month + 1, 1)
 
 
-BUILD_AGG_TABLES_SQL = """
-CREATE OR REPLACE TABLE agg_occ AS
-    SELECT advertisement_id,
-           list(struct_pack(id := metadata_id, name := name)) AS occupations
-    FROM src.advertisement_metadata
-    WHERE type = 'JOB' AND source = 'TITLE' AND name IS NOT NULL
-    GROUP BY advertisement_id;
-
-CREATE OR REPLACE TABLE agg_loc AS
-    SELECT advertisement_id,
-           list(struct_pack(
-               country := country,
-               province := CAST(NULL AS VARCHAR),
-               district := CAST(NULL AS INTEGER),
-               postal_code := CAST(NULL AS VARCHAR)
-           )) AS locations
-    FROM src.advertisement_country
-    GROUP BY advertisement_id;
-
-CREATE OR REPLACE TABLE agg_cantons AS
-    SELECT advertisement_id, list(DISTINCT canton) AS cantons_bonus
-    FROM src.advertisement_canton
-    GROUP BY advertisement_id;
-
-CREATE OR REPLACE TABLE agg_meta AS
-    SELECT advertisement_id,
-           list(struct_pack(id := metadata_id, name := name, type := type)) AS company_metadata_list
-    FROM src.company_metadata
-    GROUP BY advertisement_id;
-"""
+# Each table is its own statement (executed separately - see build_agg_tables)
+# rather than one combined multi-statement string. A second source database
+# (2026-07-23) OOM'd here even at a 1GB cap despite having FEWER rows in
+# every underlying table than the original file that built these same four
+# tables fine at 600MB - splitting them into separate execute() calls so
+# each fully finishes (and its working memory is freed) before the next
+# starts, rather than risking overlapping memory pressure from planning/
+# running them as one batch.
+AGG_TABLE_SQL = {
+    "agg_occ": """
+        CREATE OR REPLACE TABLE agg_occ AS
+            SELECT advertisement_id,
+                   list(struct_pack(id := metadata_id, name := name)) AS occupations
+            FROM src.advertisement_metadata
+            WHERE type = 'JOB' AND source = 'TITLE' AND name IS NOT NULL
+            GROUP BY advertisement_id;
+    """,
+    "agg_loc": """
+        CREATE OR REPLACE TABLE agg_loc AS
+            SELECT advertisement_id,
+                   list(struct_pack(
+                       country := country,
+                       province := CAST(NULL AS VARCHAR),
+                       district := CAST(NULL AS INTEGER),
+                       postal_code := CAST(NULL AS VARCHAR)
+                   )) AS locations
+            FROM src.advertisement_country
+            GROUP BY advertisement_id;
+    """,
+    "agg_cantons": """
+        CREATE OR REPLACE TABLE agg_cantons AS
+            SELECT advertisement_id, list(DISTINCT canton) AS cantons_bonus
+            FROM src.advertisement_canton
+            GROUP BY advertisement_id;
+    """,
+    "agg_meta": """
+        CREATE OR REPLACE TABLE agg_meta AS
+            SELECT advertisement_id,
+                   list(struct_pack(id := metadata_id, name := name, type := type)) AS company_metadata_list
+            FROM src.company_metadata
+            GROUP BY advertisement_id;
+    """,
+}
 
 # Shared SELECT for building `prejoined` — same 4 LEFT JOINs as the old
 # per-day query, but run once per month (see design history point 4) and
@@ -254,7 +282,7 @@ def _connect():
     # months are just marginally heavier than others. There's real headroom
     # (~1.68GB free out of 7.7GB total, checked live) so raised to 1GB,
     # still leaving a safety margin for the OS/other processes.
-    con.execute("SET memory_limit='1GB'")
+    con.execute(f"SET memory_limit='{os.environ.get('EXPORT_MEMORY_LIMIT', '1GB')}'")
     temp_dir = OUT_DIR / "_duckdb_tmp"
     temp_dir.mkdir(parents=True, exist_ok=True)
     con.execute(f"SET temp_directory='{str(temp_dir).replace(chr(92), '/')}'")
@@ -271,12 +299,13 @@ def build_agg_tables(con):
     ran. That doubled overhead lines up with runs consistently dying right
     as the first day query started. Reusing one connection removes that."""
     existing = {r[0] for r in con.sql("SHOW TABLES").fetchall()}
-    if {"agg_occ", "agg_loc", "agg_cantons", "agg_meta"}.issubset(existing):
-        print("Step A: agg_* tables already exist — skipping.", flush=True)
-    else:
-        print("Step A: materializing occupation/location/canton/company-metadata aggregate tables...", flush=True)
-        con.execute(BUILD_AGG_TABLES_SQL)
-        print("  Done.", flush=True)
+    for table_name, sql in AGG_TABLE_SQL.items():
+        if table_name in existing:
+            print(f"Step A: {table_name} already exists — skipping.", flush=True)
+            continue
+        print(f"Step A: building {table_name}...", flush=True)
+        con.execute(sql)
+        print(f"  {table_name}: done.", flush=True)
 
 
 MONTHS_PER_CONNECTION = 6
