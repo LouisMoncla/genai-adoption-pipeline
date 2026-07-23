@@ -45,10 +45,22 @@ different question (flag+score against ALL layer1/2/3 keywords, no tiering, buil
 2026-07-17 as a placeholder before the validated list existed). This module answers
 Jeremias's actual current ask (group-priority classification against the VALIDATED
 50-keyword list only). Both can coexist; simple_keyword_scoring.py is left as-is.
+
+PARALLELIZED ACROSS FILES (added 2026-07-23): the per-row Python matching loop is
+CPU-bound, not memory-bound - unlike the export/Phase I work earlier, there's no
+benefit to a bigger memory cap here, only to more CPU cores. A single-threaded first
+run projected to ~4 hours for the full 2020-2025 dataset based on the smallest year's
+actual timing. Switched to multiprocessing.Pool across files (this machine has 12
+logical cores and, per the user, is free to use all of them right now) - each worker
+rebuilds the small (50-keyword) pattern set once via an initializer rather than
+re-compiling per file. Also added a skip-if-already-classified check per file, so a
+partial run (or one interrupted to make this exact change) resumes cheaply instead of
+redoing finished files.
 """
 
 import json
 import logging
+import multiprocessing
 import re
 import unicodedata
 from pathlib import Path
@@ -58,6 +70,8 @@ import polars as pl
 from pipeline.config_loader import PipelineConfig
 
 logger = logging.getLogger(__name__)
+
+N_WORKERS = 10  # of 12 logical cores - leaves a couple free for the OS/this script
 
 MASTER_KEYWORDS_PATH = (
     Path(__file__).resolve().parent.parent / "keyword_lists" / "master_keywords.json"
@@ -109,81 +123,143 @@ def build_keyword_patterns(master_keywords: list[dict]):
     return en_patterns, local_patterns
 
 
+# Bare "Copilot" (Group 2 keyword, distinct from the already-Group-1 "Microsoft
+# Copilot"/"GitHub Copilot") collides with genuine aviation co-pilot job ads
+# (found 2026-07-23: drove the occupation-share plot's #2 result, "Aircraft
+# Pilots", ISCO 3153). NOT "pilot" itself - that's a substring of "copilot" and
+# would trivially self-match every hit. These are specific aviation-context
+# words that a real co-pilot job ad uses but an AI/software "Copilot" mention
+# wouldn't.
+_AVIATION_CONTEXT_WORDS = (
+    "cockpit", "flugzeug", "luftfahrt", "aviation", "airline", "aircraft",
+    "ambulanzjet", "jetpilot", "kurzstreckenflug", "langstreckenflug",
+    "atpl", "airbus", "boeing",
+)
+
+
+def _is_aviation_copilot(normalized_text: str) -> bool:
+    return any(w in normalized_text for w in _AVIATION_CONTEXT_WORDS)
+
+
 def classify_text(normalized_text: str, lang: str, en_patterns, local_patterns) -> dict[str, int]:
     """Return {matched_keyword: group} for every validated keyword found in
     this (already-normalized) text."""
     matched: dict[str, int] = {}
     for kw, grp, pat in en_patterns:
+        if kw == "Copilot" and _is_aviation_copilot(normalized_text):
+            continue
         if pat.search(normalized_text):
             matched[kw] = grp
     for kw, grp, pat in local_patterns.get(lang, []):
+        if kw == "Copilot" and _is_aviation_copilot(normalized_text):
+            continue
         if pat.search(normalized_text):
             matched[kw] = grp
     return matched
 
 
+_worker_patterns = None  # set once per worker process by _init_worker()
+
+
+def _init_worker():
+    """Pool initializer - runs once per worker process (not once per file),
+    so the 50-keyword pattern set is only ever compiled N_WORKERS times, not
+    once per file."""
+    global _worker_patterns
+    _worker_patterns = build_keyword_patterns(load_master_keywords())
+
+
+def _classify_file_worker(args) -> tuple[str, int]:
+    """Runs in a worker process. Must be a top-level function (not a
+    closure/method) so multiprocessing can pickle it for Windows' spawn-based
+    process start method."""
+    pf, out_path, content_col, job_id_col = args
+    en_patterns, local_patterns = _worker_patterns
+
+    df = pl.read_parquet(pf)
+    if df.is_empty():
+        return (pf.name, 0)
+
+    struct_series = df.select(
+        pl.struct([content_col, "detected_language", job_id_col])
+    ).to_series()
+
+    ad_ids: list = []
+    groups: list[str] = []
+    trigger_lists: list[list[str]] = []
+
+    for row in struct_series:
+        text = row[content_col]
+        lang = row["detected_language"]
+        norm = normalize(text or "")
+
+        matched = classify_text(norm, lang, en_patterns, local_patterns)
+        if matched:
+            best_group = min(matched.values())
+            triggers = sorted(k for k, g in matched.items() if g == best_group)
+            groups.append(str(best_group))
+        else:
+            triggers = []
+            groups.append("NA")
+
+        ad_ids.append(row[job_id_col])
+        trigger_lists.append(triggers)
+
+    df_out = df.with_columns([
+        pl.Series("ad_id", ad_ids),
+        pl.Series("group", groups),
+        pl.Series("matched_group_keywords", trigger_lists, dtype=pl.List(pl.String)),
+    ])
+    df_out.write_parquet(out_path)
+    return (pf.name, df.height)
+
+
 def classify_postings_by_group(config: PipelineConfig) -> None:
     """Entry point. Reads output/prepared_data (Phase I + language detection
-    output), writes output/classified_data with ad_id + group added."""
+    output), writes output/classified_data with ad_id + group added.
+    Parallelized across files via a process pool - see module docstring."""
     output_dir = Path(config.output_dir)
     data_root = output_dir / "prepared_data"
     out_root = output_dir / "classified_data"
     out_root.mkdir(parents=True, exist_ok=True)
 
     master_keywords = load_master_keywords()
-    en_patterns, local_patterns = build_keyword_patterns(master_keywords)
     logger.info(f"=== Group classification: {len(master_keywords)} validated keywords "
                 f"(Group 1={sum(1 for k in master_keywords if k['group']==1)}, "
                 f"Group 2={sum(1 for k in master_keywords if k['group']==2)}, "
                 f"Group 3={sum(1 for k in master_keywords if k['group']==3)}) ===")
 
+    work_items = []
+    skipped = 0
     for p_dir in sorted(data_root.glob("year=*")):
-        year_name = p_dir.name
         files = sorted(p_dir.glob("*.parquet"))
         if not files:
             continue
-
-        year_out = out_root / year_name
+        year_out = out_root / p_dir.name
         year_out.mkdir(exist_ok=True)
-
         for pf in files:
-            df = pl.read_parquet(pf)
-            if df.is_empty():
+            out_path = year_out / pf.name
+            if out_path.exists():
+                skipped += 1
                 continue
+            work_items.append((pf, out_path, config.col.content, config.col.job_id))
 
-            struct_series = df.select(
-                pl.struct([config.col.content, "detected_language", config.col.job_id])
-            ).to_series()
+    if skipped:
+        logger.info(f"  {skipped} file(s) already classified — skipping.")
+    if not work_items:
+        logger.info("  Nothing left to classify.")
+        return
 
-            ad_ids: list = []
-            groups: list[str] = []
-            trigger_lists: list[list[str]] = []
+    n_workers = min(N_WORKERS, len(work_items))
+    logger.info(f"  Classifying {len(work_items)} file(s) using {n_workers} worker process(es)...")
 
-            for row in struct_series:
-                text = row[config.col.content]
-                lang = row["detected_language"]
-                norm = normalize(text or "")
+    done = 0
+    with multiprocessing.Pool(processes=n_workers, initializer=_init_worker) as pool:
+        for fname, n_rows in pool.imap_unordered(_classify_file_worker, work_items):
+            done += 1
+            logger.info(f"  [{done}/{len(work_items)}] {fname}: {n_rows:,} rows classified.")
 
-                matched = classify_text(norm, lang, en_patterns, local_patterns)
-                if matched:
-                    best_group = min(matched.values())
-                    triggers = sorted(k for k, g in matched.items() if g == best_group)
-                    groups.append(str(best_group))
-                else:
-                    triggers = []
-                    groups.append("NA")
-
-                ad_ids.append(row[config.col.job_id])
-                trigger_lists.append(triggers)
-
-            df_out = df.with_columns([
-                pl.Series("ad_id", ad_ids),
-                pl.Series("group", groups),
-                pl.Series("matched_group_keywords", trigger_lists, dtype=pl.List(pl.String)),
-            ])
-            df_out.write_parquet(year_out / pf.name)
-
-        logger.info(f"    {year_name}: classified.")
+    logger.info("  All files classified.")
 
 
 if __name__ == "__main__":

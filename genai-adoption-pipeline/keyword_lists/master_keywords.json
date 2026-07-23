@@ -189,10 +189,10 @@
       "dhs_rate": 1.99,
       "avg_ratio": null,
       "forms": {
-        "en": "RAG",
-        "de": "RAG",
-        "fr": "RAG",
-        "it": "RAG"
+        "en": "Retrieval-Augmented Generation",
+        "de": "Abrufgestützte Generierung",
+        "fr": "Génération augmentée par récupération",
+        "it": "Generazione aumentata dal recupero"
       }
     },
     {
@@ -410,10 +410,10 @@
       "dhs_rate": 1.92,
       "avg_ratio": 463,
       "forms": {
-        "en": "LLM",
-        "de": "LLM",
-        "fr": "LLM",
-        "it": "LLM"
+        "en": "Large language models",
+        "de": "Große Sprachmodelle",
+        "fr": "Grands modèles de langage",
+        "it": "Modelli linguistici di grandi dimensioni"
       }
     },
     {

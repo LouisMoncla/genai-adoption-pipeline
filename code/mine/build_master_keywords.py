@@ -16,6 +16,32 @@ logic is needed for them; using the same-index lookup handles it automatically.
 If a validated keyword has no match anywhere in translations.json, its EN form is used for
 every language and a warning is printed - this should not happen given the check above, but
 the script doesn't assume it silently.
+
+OVERRIDES (added 2026-07-23, Jeremias's decision): the bare acronyms "LLM" and "RAG" were
+found to collide with unrelated Swiss professional terms after normalization strips
+punctuation - "LL.M." (the Master of Laws legal degree) becomes indistinguishable from "LLM"
+(84% of all "LLM" matches in the first real run turned out to be the legal degree, not the AI
+term), and "RAG" collided with a Swiss auditor licensing designation on a smaller scale. Fix:
+match on the spelled-out forms instead of the bare acronyms for these two specific validated
+keywords. The "keyword" label (used for traceability to Domenico's Table 4, and shown in
+matched_group_keywords output) stays "LLM"/"RAG" - only the "forms" (the actual text matched
+against) change. Applied as a post-merge override here, not by editing
+keyword_lists/layer2_hosseini.py - that file isn't in this system's actual matching path
+(group_classification.py reads master_keywords.json, built from validated_keywords.json +
+keyword_translations.json; layer1/2/3.py and keyword_translation.py's Google-Translate-backed
+cache are only used by the older keyword_scoring.py / simple_keyword_scoring.py path). Editing
+this file's OVERRIDES dict and re-running is the only step needed - no retranslation, no
+internet required.
+Note: "RAG" -> "Retrieval-Augmented Generation" is Group 1, same as the already-existing
+"Retrieval augmented generation" (St source) validated keyword - this override makes "RAG"
+match the identical phrase, which is harmless redundancy (same group either way) rather than
+a functional change. "LLM" -> "Large language models" is the consequential one: it's Group 2,
+while "Large language model" (singular) is a separate Group 1 keyword - kept deliberately
+distinct (plural form here) so this override doesn't make the Group 2 entry unreachable by
+duplicating the Group 1 singular form.
+Per Jeremias: check the match count after this change - if the spelled-out forms give very
+few matches (people overwhelmingly write the bare acronym in practice), that's a real finding
+to report back, not a sign the fix needs more work.
 """
 
 import json
@@ -28,6 +54,25 @@ OUT_PATH = ROOT / "genai-adoption-pipeline" / "keyword_lists" / "master_keywords
 
 LANGS = ["en", "de", "fr", "it"]
 LAYERS = ["layer1", "layer2", "layer3"]
+
+# Manually translated (not from keyword_translations.json - these exact plural/expanded forms
+# aren't in that file). German/Italian pluralization is regular here; French uses the
+# standard "grands modèles de langage" phrasing. Worth a native-speaker spot-check but these
+# are straightforward technical terms, not idiomatic.
+FORM_OVERRIDES = {
+    "LLM": {
+        "en": "Large language models",
+        "de": "Große Sprachmodelle",
+        "fr": "Grands modèles de langage",
+        "it": "Modelli linguistici di grandi dimensioni",
+    },
+    "RAG": {
+        "en": "Retrieval-Augmented Generation",
+        "de": "Abrufgestützte Generierung",
+        "fr": "Génération augmentée par récupération",
+        "it": "Generazione aumentata dal recupero",
+    },
+}
 
 
 def _find_translation_row(translations: dict, keyword: str) -> dict | None:
@@ -60,6 +105,9 @@ def main():
         if row is None:
             unmatched.append(kw)
             row = {lang: kw for lang in LANGS}
+
+        if kw in FORM_OVERRIDES:
+            row = dict(FORM_OVERRIDES[kw])
 
         master.append({
             "keyword": kw,

@@ -8,9 +8,22 @@ Ads are grouped by ISCO code (the thesis's own occupational classification,
 Section 3.4) rather than raw x28 occupation id, since many x28 ids are just
 spelling/title variants of the same underlying occupation and would otherwise
 fragment the plot into near-duplicates. Each ISCO group is labeled with the
-first x28 occupation name found for it in the mapping file - a simple,
-deterministic label choice, not the official ISCO-08 title text (that isn't
-in any of our source files, only the numeric code is).
+official group name from data/raw/isco_structure.csv (added 2026-07-23,
+superseding an even earlier version that used an arbitrary first-encountered
+x28 occupation name, usually German - see git history).
+
+isco_structure.csv is the official ISCO structure table (one canonical
+"description" per unit-group code, plus the full major/sub_major/minor
+hierarchy) - cleaner than an alternate-title index since there's no
+"which of these N variants do we pick" ambiguity. IMPORTANT: the raw file
+mixes FOUR classification eras under the same numeric codes (ISCO_version
+column has ISCO-08/88/68/58) - the same 4-digit code means different things
+across versions (e.g. unit 1120 is "Managing Directors and Chief Executives"
+under ISCO-08 but "Senior government officials" under an older version).
+Must filter to ISCO_version == "ISCO-08" only, which gives exactly 436
+unique codes with zero inconsistent descriptions - confirmed by checking
+before wiring this in, since silently mixing eras would have corrupted the
+mapping without any obvious symptom.
 
 This is a SANITY CHECK, not a publication figure: results should look broadly
 similar in shape to the thesis's own findings (concentrated in IT/research/
@@ -32,10 +45,18 @@ MIN_ADS_PER_OCCUPATION = 20  # drop occupations with too few ads to be meaningfu
 TOP_N = 20
 
 
+def _load_isco_titles(root: Path) -> dict:
+    """Returns {isco_code (int): official ISCO-08 unit-group name (str)}."""
+    structure = pd.read_csv(root / "data" / "raw" / "isco_structure.csv", encoding="cp1252")
+    structure = structure[structure["ISCO_version"] == "ISCO-08"]
+    return dict(zip(structure["unit"].astype(int), structure["description"].str.strip()))
+
+
 def build_occupation_to_isco_map(root: Path) -> dict:
     """Returns {x28_occupation_id: (isco_code, display_label)}."""
     avam_map = pd.read_excel(root / "data" / "raw" / "x28_Occupation_to_AVAM.xlsx")
     isco_map = pd.read_csv(root / "data" / "raw" / "q93_isco.csv")
+    isco_titles = _load_isco_titles(root)
 
     avam_map = avam_map.rename(columns={
         "id (x28)": "x28_id", "name (x28)": "x28_name", "code (AVAM)": "avam_code",
@@ -51,7 +72,10 @@ def build_occupation_to_isco_map(root: Path) -> dict:
     mapping = {}
     for row in merged.itertuples():
         if row.x28_id not in mapping:
-            mapping[row.x28_id] = (str(row.isco_code), row.x28_name)
+            # Fall back to the x28 name only if this ISCO code isn't in the
+            # index (shouldn't happen often - coverage checked at 437 codes).
+            label = isco_titles.get(row.isco_code, row.x28_name)
+            mapping[row.x28_id] = (str(row.isco_code), label)
     return mapping
 
 
@@ -75,7 +99,14 @@ def main():
         if occs is None:
             continue
         for occ in occs:
-            occ_id = occ["id"]
+            # occupations[].id comes out of the export as a string ("11001162"),
+            # but occ_map's keys are int (pandas' Excel read infers the AVAM
+            # mapping's id column as numeric) - every lookup silently failed
+            # until this cast, which is why the first run found zero matches.
+            try:
+                occ_id = int(occ["id"])
+            except (TypeError, ValueError):
+                continue
             if occ_id in occ_map:
                 isco_code, label = occ_map[occ_id]
                 rows.append((isco_code, label, has_group))
