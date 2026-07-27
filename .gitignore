@@ -39,3 +39,8 @@ genai-adoption-pipeline/output/*
 
 outputs/
 genai-adoption-pipeline/Draft_Measuring Firm-Level Adoption of Generative AI in Siwtzerland.pdf
+
+# --- Internal working notes ---
+# Meeting prep, context files for/from Claude Code, draft questions for Jeremias -
+# not meant to be visible to him if he ever looks at this repo.
+notes/
