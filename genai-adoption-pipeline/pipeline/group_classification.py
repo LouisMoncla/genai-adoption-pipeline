@@ -235,8 +235,35 @@ def classify_postings_by_group(config: PipelineConfig) -> None:
         for pf in files:
             out_path = year_out / pf.name
             if out_path.exists():
-                skipped += 1
-                continue
+                # Row-count check, not just existence (2026-08-03): Phase I's
+                # data_preparation.py has no skip-logic and rewrites every
+                # batch_NNN.parquet from scratch each run - when new source
+                # data shifts a year's batch boundaries (e.g. year=2018
+                # tripling in size once the 2016-2018 dump was added),
+                # prepared_data/year=2018/batch_000.parquet ends up with
+                # totally different rows than before, but the OLD
+                # classified_data/year=2018/batch_000.parquet from the prior
+                # run is still sitting there under the same filename - a
+                # pure existence check silently treated it as "already
+                # done" forever. Caught because the post-run row count came
+                # out 48,414 short of expected; the stale file's row count
+                # (58,492) matched a previous run's log line exactly.
+                # Cheap fix: compare row counts (parquet metadata, not a
+                # full read) before trusting an existing output file.
+                try:
+                    src_n = pl.scan_parquet(pf).select(pl.len()).collect().item()
+                    out_n = pl.scan_parquet(out_path).select(pl.len()).collect().item()
+                except Exception:
+                    src_n, out_n = None, None
+                if src_n is not None and src_n == out_n:
+                    skipped += 1
+                    continue
+                logger.warning(
+                    f"  {p_dir.name}/{pf.name}: existing classified output "
+                    f"({out_n if out_n is not None else '?'} rows) doesn't match "
+                    f"current prepared_data ({src_n if src_n is not None else '?'} rows) "
+                    f"- stale, reclassifying."
+                )
             work_items.append((pf, out_path, config.col.content, config.col.job_id))
 
     if skipped:
