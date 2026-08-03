@@ -3,7 +3,8 @@ GenAI Adoption Pipeline — Swiss Labor Market Analysis.
 
 Entry point for the multi-phase pipeline:
   Phase I:  Data preparation (filtering, dedup, sanity checks)
-  Language: FastText language detection
+  Language: x28 native language column (pipeline/language_detection.py — switched
+            from FastText to x28's own `language` field 2026-08-02, per Jeremias)
   Translate: DeepTranslator keyword translation
   Phase II: Keyword flag + score (simplified — see below)
   Phase III: Aggregation and Reporting

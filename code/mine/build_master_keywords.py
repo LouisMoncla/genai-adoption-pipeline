@@ -59,6 +59,21 @@ LAYERS = ["layer1", "layer2", "layer3"]
 # aren't in that file). German/Italian pluralization is regular here; French uses the
 # standard "grands modèles de langage" phrasing. Worth a native-speaker spot-check but these
 # are straightforward technical terms, not idiomatic.
+EXCLUDED_KEYWORDS = {
+    # Per Jeremias, 2026-07-30: bare "Copilot" is too ambiguous on its own
+    # (collides with aviation co-pilot job ads, internal tool names, etc. -
+    # previously patched with an aviation-context word-list exclusion in
+    # group_classification.py). Rather than keep patching bare "Copilot",
+    # drop it entirely and rely on "GitHub Copilot" / "Microsoft Copilot",
+    # which already exist as separate, unambiguous Group-1 validated keywords
+    # below - any genuine Microsoft/GitHub Copilot mention is still caught by
+    # those two exact-phrase entries. Kept in validated_keywords.json (not
+    # deleted there) since Domenico's Table 4 did validate bare "Copilot" as
+    # Group 2 - this is a merge-time exclusion, not a rewrite of his
+    # validated source data.
+    "Copilot",
+}
+
 FORM_OVERRIDES = {
     "LLM": {
         "en": "Large language models",
@@ -101,6 +116,8 @@ def main():
 
     for entry in validated["keywords"]:
         kw = entry["keyword"]
+        if kw in EXCLUDED_KEYWORDS:
+            continue
         row = _find_translation_row(translations, kw)
         if row is None:
             unmatched.append(kw)

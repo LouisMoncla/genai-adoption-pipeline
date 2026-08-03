@@ -15,6 +15,7 @@ class ColumnMapping:
     """Abstracted column names for the dataset."""
     date: str
     content: str
+    language: str          # x28's own detected-language flag (x28: "language")
     locations: str
     job_id: str           # Top-level posting dedup key (x28: "duplicate_group")
     # Nested company fields
@@ -82,6 +83,7 @@ def load_config(config_path: str = "pipeline/config.yaml") -> PipelineConfig:
     col = ColumnMapping(
         date=m.get("date", "tst_created"),
         content=m.get("content", "content_clean"),
+        language=m.get("language", "language"),
         locations=m.get("locations", "locations"),
         job_id=m.get("job_id", "id"),
         company_struct=m.get("company_struct", "company"),

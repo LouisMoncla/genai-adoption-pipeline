@@ -15,8 +15,15 @@ DELIBERATELY SIMPLER than Domenico's full flagging algorithm (2026-07-22 decisio
 this is keyword-group matching only. It does NOT implement:
   - Rule 2's occupation-intensity gate (Appendix B's GenAI-intensive occupation list)
   - Rule 3's co-occurrence requirement (>=3 combined G2+G3 keywords)
-  - The Copilot/aviation special-case exclusion
 Do not add these back in without checking first - explicitly asked for.
+
+COPILOT: bare "Copilot" used to be a validated Group-2 keyword here, patched with an
+aviation-context word-list exclusion after it drove a false-positive spike in the
+occupation-share plot (co-pilot job ads). Per Jeremias (2026-07-30), that keyword is
+now excluded entirely at merge time (see code/mine/build_master_keywords.py's
+EXCLUDED_KEYWORDS) - genuine Copilot mentions are still caught via the separate,
+unambiguous "GitHub Copilot"/"Microsoft Copilot" Group-1 keywords, so no in-code
+exclusion logic is needed here anymore.
 
 NORMALIZATION SPEC (from Jeremias, applied identically to both the ad text and every
 keyword form before matching - see normalize()):
@@ -123,36 +130,14 @@ def build_keyword_patterns(master_keywords: list[dict]):
     return en_patterns, local_patterns
 
 
-# Bare "Copilot" (Group 2 keyword, distinct from the already-Group-1 "Microsoft
-# Copilot"/"GitHub Copilot") collides with genuine aviation co-pilot job ads
-# (found 2026-07-23: drove the occupation-share plot's #2 result, "Aircraft
-# Pilots", ISCO 3153). NOT "pilot" itself - that's a substring of "copilot" and
-# would trivially self-match every hit. These are specific aviation-context
-# words that a real co-pilot job ad uses but an AI/software "Copilot" mention
-# wouldn't.
-_AVIATION_CONTEXT_WORDS = (
-    "cockpit", "flugzeug", "luftfahrt", "aviation", "airline", "aircraft",
-    "ambulanzjet", "jetpilot", "kurzstreckenflug", "langstreckenflug",
-    "atpl", "airbus", "boeing",
-)
-
-
-def _is_aviation_copilot(normalized_text: str) -> bool:
-    return any(w in normalized_text for w in _AVIATION_CONTEXT_WORDS)
-
-
 def classify_text(normalized_text: str, lang: str, en_patterns, local_patterns) -> dict[str, int]:
     """Return {matched_keyword: group} for every validated keyword found in
     this (already-normalized) text."""
     matched: dict[str, int] = {}
     for kw, grp, pat in en_patterns:
-        if kw == "Copilot" and _is_aviation_copilot(normalized_text):
-            continue
         if pat.search(normalized_text):
             matched[kw] = grp
     for kw, grp, pat in local_patterns.get(lang, []):
-        if kw == "Copilot" and _is_aviation_copilot(normalized_text):
-            continue
         if pat.search(normalized_text):
             matched[kw] = grp
     return matched
@@ -210,7 +195,17 @@ def _classify_file_worker(args) -> tuple[str, int]:
         pl.Series("group", groups),
         pl.Series("matched_group_keywords", trigger_lists, dtype=pl.List(pl.String)),
     ])
-    df_out.write_parquet(out_path)
+    # Write to a temp filename, rename only after a successful write - a kill
+    # mid-write must never leave a truncated file at the real output path,
+    # since the skip-if-exists check below only checks existence, not
+    # validity. Found the hard way 2026-07-30: 5 files were left truncated by
+    # a kill and silently passed the "already classified" skip check on the
+    # next run, until scanning classified_data errored on them directly.
+    # Mirrors code/mine/export_duckdb_to_parquet.py's existing pattern for the
+    # same reason.
+    tmp_path = out_path.with_suffix(".parquet.inprogress")
+    df_out.write_parquet(tmp_path)
+    tmp_path.replace(out_path)
     return (pf.name, df.height)
 
 

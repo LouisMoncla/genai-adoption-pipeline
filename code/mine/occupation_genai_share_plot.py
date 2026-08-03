@@ -44,6 +44,50 @@ from pipeline.config_loader import load_config
 MIN_ADS_PER_OCCUPATION = 20  # drop occupations with too few ads to be meaningful
 TOP_N = 20
 
+# Per Jeremias, 2026-07-30: the "Fotomodell" (photo model) x28 occupation id was
+# found (2026-07-29 investigation) to disproportionately co-occur with genuine
+# AI/ML job ads - 8.14% of Fotomodell-tagged ads are GenAI-flagged vs the ~0.2%
+# corpus-wide base rate, and every sampled Group-3 example was a real ML/AI
+# posting (Master's thesis in Geospatial AI, Roche MLOps internship, etc.), not
+# an actual photo-modeling ad. Root cause: x28's own occupation-tagging seems to
+# fuzzy-match ads whose text is saturated with "model"/"Foundation Model"/
+# "Language Model" mentions to AVAM-2020 code 101924, literally named "Model",
+# alongside the ad's real (correct) occupation tag. Jeremias's fix: only trust
+# the Fotomodell tag when it's the ad's SOLE occupation entry - if an ad has
+# another occupation tag too, that other one is almost certainly the real job
+# title and Fotomodell is the mistagging artifact, so drop it.
+FOTOMODELL_X28_ID = 11001610
+
+
+def _drop_secondary_fotomodell_tag(occs: list) -> list:
+    """If Fotomodell co-occurs with >=1 other occupation on the same ad, drop
+    the Fotomodell entry and keep the rest - only trust it when it's the ad's
+    only occupation tag."""
+    if len(occs) <= 1:
+        return occs
+    try:
+        has_other = any(int(o["id"]) != FOTOMODELL_X28_ID for o in occs)
+    except (TypeError, ValueError):
+        return occs
+    if not has_other:
+        return occs
+    return [o for o in occs if _safe_id(o) != FOTOMODELL_X28_ID]
+
+
+def _safe_id(occ) -> int | None:
+    try:
+        return int(occ["id"])
+    except (TypeError, ValueError):
+        return None
+
+# Ads tagged with more than this many occupation ids have an ambiguous occupation -
+# exclude them from the occupation-share breakdown (not from any other count). Matches
+# Jeremias's own R scripts (code/from_jeremias/test_ads_isco3_timeseries.R and
+# wfh_analysis.R), both of which apply the identical MAX_JOBS <- 5L cutoff before their
+# own x28->AVAM->ISCO join, for the same reason: with >5 tags, which one the ad
+# "actually" is becomes unclear enough that keeping it would add noise, not signal.
+MAX_OCCUPATIONS_PER_AD = 5
+
 
 def _load_isco_titles(root: Path) -> dict:
     """Returns {isco_code (int): official ISCO-08 unit-group name (str)}."""
@@ -94,9 +138,18 @@ def main():
     df = lf.select(["group", "occupations"]).collect()
 
     rows = []
+    ambiguous_skipped = 0
+    fotomodell_dropped = 0
     for group, occs in zip(df["group"], df["occupations"]):
         has_group = group != "NA"
         if occs is None:
+            continue
+        filtered = _drop_secondary_fotomodell_tag(occs)
+        if len(filtered) != len(occs):
+            fotomodell_dropped += 1
+        occs = filtered
+        if len(occs) > MAX_OCCUPATIONS_PER_AD:
+            ambiguous_skipped += 1
             continue
         for occ in occs:
             # occupations[].id comes out of the export as a string ("11001162"),
@@ -110,6 +163,11 @@ def main():
             if occ_id in occ_map:
                 isco_code, label = occ_map[occ_id]
                 rows.append((isco_code, label, has_group))
+
+    print(f"Dropped a secondary 'Fotomodell' tag on {fotomodell_dropped:,} ad(s) that also "
+          f"had another occupation tag (per Jeremias's fix - see FOTOMODELL_X28_ID comment).")
+    print(f"Excluded {ambiguous_skipped:,} ad(s) with >{MAX_OCCUPATIONS_PER_AD} occupation "
+          f"tags (ambiguous occupation) from the occupation-share breakdown.")
 
     agg = pd.DataFrame(rows, columns=["isco_code", "label", "has_group"])
     if agg.empty:

@@ -391,19 +391,6 @@
       }
     },
     {
-      "keyword": "Copilot",
-      "group": 2,
-      "source": "H&L",
-      "dhs_rate": 1.89,
-      "avg_ratio": 112,
-      "forms": {
-        "en": "Copilot",
-        "de": "Copilot",
-        "fr": "Copilot",
-        "it": "Copilot"
-      }
-    },
-    {
       "keyword": "LLM",
       "group": 2,
       "source": "H&L",

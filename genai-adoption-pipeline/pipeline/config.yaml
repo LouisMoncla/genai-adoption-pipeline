@@ -14,6 +14,7 @@ data_path: "C:/Users/Louis/Documents/Internship/data/processed/x28_parquet/"
 column_mapping:
   date: "tst_created"
   content: "content_clean"
+  language: "language"  # x28's own detected-language flag on advertisements (added 2026-08-02, replaces FastText - see pipeline/language_detection.py)
   locations: "locations"
   job_id: "duplicate_group"  # Top-level posting dedup key (x28 field; "id" does not exist at top level)
   company_struct: "company"
@@ -45,7 +46,13 @@ allowed_languages: ["de", "fr", "it", "rm", "en"]
 exclude_recruiters: true
 
 # C4: Micro-Enterprise exclusion (1-10 employees).
-exclude_micro_enterprises: true
+# Disabled per Jeremias (2026-08-02): he already filters firms with 10+ ads
+# downstream on his end, making this redundant - and disabling it also fixes a
+# Polars null-comparison bug (null != x -> null -> row dropped) that was
+# silently killing postings with an UNKNOWN firm size, not just confirmed
+# micro-enterprises (worst case: Dec 2018, 128,455 raw rows -> 33 survivors).
+# See notes/jeremias_feedback_response_2026-07-30.md #7.
+exclude_micro_enterprises: false
 micro_enterprise_id: "57000001"
 
 # C5: Statistical Sanity Check (upper-tail log-normal CI per size class)

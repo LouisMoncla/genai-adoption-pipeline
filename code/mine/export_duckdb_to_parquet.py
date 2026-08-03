@@ -5,6 +5,14 @@ schema_ads.json and config.yaml's column_mapping) — so the pipeline's existing
 flattening code runs unmodified against this dataset.
 
 Semantics established via inspection of the actual data (not assumed):
+  - language: x28's own detected-language flag on `advertisements` (added
+    2026-08-02, per Jeremias, to replace running FastText over the ad text
+    downstream). Confirmed present on both source dumps via DESCRIBE. Values
+    are lowercase ISO codes (de/fr/en/it/...) or NULL - NULL and any code not
+    in config.yaml's allowed_languages (including near-zero "rm" coverage -
+    x28 essentially never tags Romansh) fall out naturally via
+    language_detection.py's existing allowed-language filter, no special
+    handling needed.
   - Occupation title lives in advertisement_metadata where type='JOB' AND
     source='TITLE' (name field). advertisement_positions is NOT occupation —
     it only has 7 distinct values (EMPLOYEE, DIRECTOR, ...), i.e. seniority level.
@@ -16,9 +24,12 @@ Semantics established via inspection of the actual data (not assumed):
     create a cartesian-product blowup. Canton is exported separately as a
     bonus, non-schema column in case cantonal analysis is wanted later.
   - company.{id,name,size,is_recruiter} come directly from the already-flat
-    columns on `advertisements` (no join needed). company.metadata (industry/
-    market tags) comes from company_metadata, passed through un-filtered —
-    the pipeline's own _flatten_and_filter() already picks out type=="INDUSTRY".
+    columns on `advertisements` (no join needed). company.metadata (industry
+    tags) comes from company_metadata, filtered to type=='INDUSTRY' at export
+    time (2026-08-02, see AGG_TABLE_SQL's agg_meta comment - the pipeline's
+    own _flatten_and_filter() only ever reads INDUSTRY entries anyway, MARKET
+    is dead weight downstream and was the main cost of an OOM on the largest
+    source dump).
   - date columns are formatted as strings ("%Y-%m-%d %H:%M:%S.%f") because
     data_preparation.py's _flatten_and_filter() calls .str.replace(...).str.to_datetime(...)
     on the date column, which requires a String dtype, not a native Timestamp.
@@ -165,17 +176,46 @@ AGG_TABLE_SQL = {
             WHERE type = 'JOB' AND source = 'TITLE' AND name IS NOT NULL
             GROUP BY advertisement_id;
     """,
+    # Split singleton vs. duplicated advertisement_ids (2026-08-02): on the
+    # main 2022-2025 dump, advertisement_country has 6,575,794 ids with
+    # exactly 1 row and only 2,565 with >1 (checked directly). A plain
+    # `list(struct_pack(...)) ... GROUP BY` over the whole table OOM'd at
+    # every memory cap tried (up to 2.5GB, more than agg_occ needed despite
+    # agg_occ's filtered source having MORE rows) - the cost is per-group
+    # LIST-aggregate-state overhead across 6.58M groups, not real data volume
+    # (each list is 1 tiny struct). Building the singleton branch as a plain
+    # per-row scalar list literal (no aggregation at all) and reserving the
+    # real GROUP BY + list() aggregate for only the ~2,565 actually-duplicated
+    # ids keeps the expensive path tiny. agg_cantons/agg_meta don't get the
+    # same treatment - checked their group-size distributions and both have
+    # real, wide multi-row fan-out (up to 27 cantons/ad, up to 621K ids with
+    # 3+ metadata rows), so this singleton trick wouldn't help there anyway.
     "agg_loc": """
         CREATE OR REPLACE TABLE agg_loc AS
-            SELECT advertisement_id,
-                   list(struct_pack(
-                       country := country,
-                       province := CAST(NULL AS VARCHAR),
-                       district := CAST(NULL AS INTEGER),
-                       postal_code := CAST(NULL AS VARCHAR)
-                   )) AS locations
-            FROM src.advertisement_country
-            GROUP BY advertisement_id;
+        WITH dup_ids AS (
+            SELECT advertisement_id FROM src.advertisement_country
+            GROUP BY advertisement_id HAVING COUNT(*) > 1
+        )
+        SELECT advertisement_id,
+               list(struct_pack(
+                   country := country,
+                   province := CAST(NULL AS VARCHAR),
+                   district := CAST(NULL AS INTEGER),
+                   postal_code := CAST(NULL AS VARCHAR)
+               )) AS locations
+        FROM src.advertisement_country
+        WHERE advertisement_id IN (SELECT advertisement_id FROM dup_ids)
+        GROUP BY advertisement_id
+        UNION ALL
+        SELECT advertisement_id,
+               [struct_pack(
+                   country := country,
+                   province := CAST(NULL AS VARCHAR),
+                   district := CAST(NULL AS INTEGER),
+                   postal_code := CAST(NULL AS VARCHAR)
+               )] AS locations
+        FROM src.advertisement_country
+        WHERE advertisement_id NOT IN (SELECT advertisement_id FROM dup_ids);
     """,
     "agg_cantons": """
         CREATE OR REPLACE TABLE agg_cantons AS
@@ -183,12 +223,38 @@ AGG_TABLE_SQL = {
             FROM src.advertisement_canton
             GROUP BY advertisement_id;
     """,
+    # Filtered to type='INDUSTRY' (2026-08-02): company_metadata has two types,
+    # INDUSTRY (7.55M rows) and MARKET (6.28M) - grepped the whole pipeline/
+    # and code/mine/ and confirmed data_preparation.py's _flatten_and_filter()
+    # is the ONLY reader of company.metadata anywhere downstream, and it only
+    # ever extracts the first type=="INDUSTRY" entry (MARKET is never read by
+    # anything). Dropping MARKET at export time - not scope creep, it's
+    # already-dead data on the main dump - roughly halves this table before
+    # aggregation. Combined with the same singleton/duplicate split used for
+    # agg_loc (INDUSTRY-only: 5,886,726 of 6,648,029 ids are singletons,
+    # 88.5%), this was needed because the plain unfiltered
+    # `list(struct_pack(...)) ... GROUP BY` OOM'd at every cap tried up to
+    # 2.5GB - more than this machine has free to give it.
     "agg_meta": """
         CREATE OR REPLACE TABLE agg_meta AS
-            SELECT advertisement_id,
-                   list(struct_pack(id := metadata_id, name := name, type := type)) AS company_metadata_list
-            FROM src.company_metadata
-            GROUP BY advertisement_id;
+        WITH industry AS (
+            SELECT advertisement_id, metadata_id, name, type
+            FROM src.company_metadata WHERE type = 'INDUSTRY'
+        ),
+        dup_ids AS (
+            SELECT advertisement_id FROM industry
+            GROUP BY advertisement_id HAVING COUNT(*) > 1
+        )
+        SELECT advertisement_id,
+               list(struct_pack(id := metadata_id, name := name, type := type)) AS company_metadata_list
+        FROM industry
+        WHERE advertisement_id IN (SELECT advertisement_id FROM dup_ids)
+        GROUP BY advertisement_id
+        UNION ALL
+        SELECT advertisement_id,
+               [struct_pack(id := metadata_id, name := name, type := type)] AS company_metadata_list
+        FROM industry
+        WHERE advertisement_id NOT IN (SELECT advertisement_id FROM dup_ids);
     """,
 }
 
@@ -204,6 +270,7 @@ _PREJOINED_SELECT = """
     a.created AS created,
     strftime(a.created, '%Y-%m-%d %H:%M:%S.%f') AS tst_created,
     strftime(a.deleted, '%Y-%m-%d %H:%M:%S.%f') AS tst_deleted,
+    a.language AS language,
     CAST(NULL AS DOUBLE) AS duration,
     a.temporary AS is_temporary,
     a.homeoffice AS has_homeoffice,
@@ -257,7 +324,7 @@ EXPORT_DAY_SQL = """
 COPY (
   SELECT duplicate_group, title, url, tst_created, tst_deleted, duration, is_temporary,
          has_homeoffice, work_quota, location, locations, cantons_bonus, content_clean,
-         origin, company, occupations
+         origin, company, occupations, language
   FROM prejoined
   WHERE CAST(created AS DATE) = DATE '{day}'
 ) TO '{out_file}' (FORMAT PARQUET)
@@ -292,12 +359,31 @@ def _connect():
 
 
 def build_agg_tables(con):
-    """Takes an already-open connection — does NOT open its own. An earlier
-    version opened a separate connection just for this check, then closed it
-    and opened another for the day loop: two full connect+attach cycles
-    (each slow under this machine's memory pressure) before any real query
-    ran. That doubled overhead lines up with runs consistently dying right
-    as the first day query started. Reusing one connection removes that."""
+    """Takes an already-open connection — does NOT open its own on entry. An
+    earlier version opened a separate connection just for this check, then
+    closed it and opened another for the day loop: two full connect+attach
+    cycles (each slow under this machine's memory pressure) before any real
+    query ran. That doubled overhead lines up with runs consistently dying
+    right as the first day query started. Reusing one connection on entry
+    removes that.
+
+    Returns the (possibly reconnected) connection — see the reconnect-between-
+    tables note below. Caller must use the returned value, same convention as
+    build_prejoined_table().
+
+    2026-08-02: reconnects between EACH table now, not just once at the end.
+    Found the hard way re-running this on the largest (main 2022-2025) source
+    dump for the first time since Step A got this dump's own dedicated
+    per-loop reconnect fixes (build_prejoined_table's MONTHS_PER_CONNECTION,
+    export_one_day's DAYS_PER_CONNECTION) — agg_loc OOM'd building a plain
+    ~6.6M-row groupby (no join, no skew: 6,578,359 distinct keys from
+    6,580,924 rows) right after agg_occ had just succeeded, at increasing
+    memory_limit caps each retry (1.3/1.3, 1.8/1.8, 2.3/2.3 GiB - scaling with
+    whatever cap was set, never with real headroom to spare). That's the exact
+    "memory build-up across iterations within one connection" pattern already
+    diagnosed and fixed for the day/month loops - Step A just never got the
+    same fix, because on the two smaller source dumps tested earlier this
+    never got stressed hard enough to surface it."""
     existing = {r[0] for r in con.sql("SHOW TABLES").fetchall()}
     for table_name, sql in AGG_TABLE_SQL.items():
         if table_name in existing:
@@ -306,6 +392,9 @@ def build_agg_tables(con):
         print(f"Step A: building {table_name}...", flush=True)
         con.execute(sql)
         print(f"  {table_name}: done.", flush=True)
+        con.close()
+        con = _connect()
+    return con
 
 
 MONTHS_PER_CONNECTION = 6
@@ -400,7 +489,7 @@ def run_all_days():
     # One connection covers Step A AND the first DAYS_PER_CONNECTION days —
     # see build_agg_tables docstring for why this matters.
     con = _connect()
-    build_agg_tables(con)
+    con = build_agg_tables(con)
     con = build_prejoined_table(con)
 
     for i, day in enumerate(all_days):
@@ -439,7 +528,7 @@ def main():
         # Manual single-day test: python export_....py 2023 1 15
         year, month, day_num = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
         con = _connect()
-        build_agg_tables(con)
+        con = build_agg_tables(con)
         con = build_prejoined_table(con)
         n = export_one_day(con, date(year, month, day_num))
         con.close()
