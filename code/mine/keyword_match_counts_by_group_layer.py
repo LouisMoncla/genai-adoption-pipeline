@@ -8,9 +8,9 @@ Broken down two ways, both from the same table:
   - by Group (1/2/3, the validated priority tier)
   - by "layer" — Jeremias's own term for what master_keywords.json's `source`
     field already records: which of the three original keyword-list scripts a
-    keyword came from (St -> keyword_lists/layer1_stanford.py, H&L ->
-    layer2_hosseini.py, LLM -> layer3.py). Those layer*.py files are no longer
-    read at match time (group_classification.py reads master_keywords.json,
+    keyword came from (St -> keyword_lists/legacy/layer1_stanford.py, H&L ->
+    legacy/layer2_hosseini.py, LLM -> legacy/layer3.py). Those layer*.py files
+    are no longer read at match time (group_classification.py reads master_keywords.json,
     itself built from data/raw/validated_keywords.json — see
     build_master_keywords.py's docstring), but `source` is exactly the
     provenance Jeremias is asking about, so no new tracking was needed.

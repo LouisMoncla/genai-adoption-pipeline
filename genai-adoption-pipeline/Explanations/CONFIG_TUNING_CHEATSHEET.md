@@ -1,5 +1,14 @@
 # Config Tuning Cheat-Sheet — Making AI Detection Stricter or More Lenient
 
+> **LEGACY (as of 2026-07-17):** the "two stages" described below (DHS-
+> regression group assignment + Rule 1/2/3/C ad flagging) belong to the
+> original Phase II design, now superseded by direct keyword-group matching
+> in `pipeline/group_classification.py` against Domenico's validated
+> keyword list. The current pipeline's tunable knobs are much simpler
+> (which keywords are validated per group, the Option B corroboration
+> threshold `k` — see `code/mine/group_strategy_analysis.py`). Kept here as
+> historical/methodology reference for the original design.
+
 All knobs live in `config.yaml`. This sheet explains **which parameters actually
 change the classification**, in which direction, and which parameters in the file
 are inert (loaded but never used) so you don't waste time tuning them.

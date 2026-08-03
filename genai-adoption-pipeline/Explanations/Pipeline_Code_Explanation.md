@@ -1,5 +1,14 @@
 # GenAI Adoption Pipeline — Code Explanation
 
+> **LEGACY (as of 2026-07-17/23):** this document describes the original
+> `main.py` / regression-based group-assignment / `aggregation.py` flow,
+> which has been superseded by keyword-group matching against Domenico's
+> validated keyword list (`pipeline/group_classification.py` +
+> `keyword_lists/master_keywords.json`). Those old modules now live in
+> `pipeline/legacy/` for provenance and are not part of the active pipeline.
+> See the top-level `genai-adoption-pipeline/README.md` for how the current
+> pipeline actually works. Kept here as historical/methodology reference.
+
 This document explains the **raw pipeline code** in [`../pipeline/`]
 
 It is split into two parts:

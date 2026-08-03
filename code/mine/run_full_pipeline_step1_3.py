@@ -10,15 +10,16 @@ import os
 import sys
 from pathlib import Path
 
-# config.yaml's output_dir ("output/") and main.py's own default config path
+# config.yaml's output_dir ("output/") and the pipeline's default config path
 # ("pipeline/config.yaml") are both relative paths written assuming the
-# process runs FROM WITHIN genai-adoption-pipeline/ (how main.py is meant to
-# be invoked). This script was first run from the project root instead,
+# process runs FROM WITHIN genai-adoption-pipeline/ (how pipeline/legacy/main.py,
+# the original entry point before this script replaced it, was meant to be
+# invoked). This script was first run from the project root instead,
 # which silently created a second, wrong "output/" at the repo root and
 # wrote all of Phase I's real output there - caught via `git status` showing
 # an unexpected untracked output/ folder before anything got committed.
 # chdir here so config.yaml's relative paths resolve the same way they
-# would under a normal `python -m pipeline.main` invocation.
+# would under that original invocation style.
 os.chdir(Path(__file__).resolve().parents[2] / "genai-adoption-pipeline")
 sys.path.insert(0, ".")
 
