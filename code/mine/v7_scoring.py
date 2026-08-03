@@ -61,6 +61,7 @@ in the output/writeup for discussion, not silently decided:
 import argparse
 import json
 import math
+import re
 from collections import Counter
 from pathlib import Path
 
@@ -121,22 +122,40 @@ def _match_ad(text: str, lang: str, en_patterns, local_patterns) -> tuple[set[st
     return via_en, via_local
 
 
-def collect_matches(config, en_patterns, local_patterns, excluded_kws: set[str] = frozenset()):
+def collect_matches(
+    config, en_patterns, local_patterns, excluded_kws: set[str] = frozenset(),
+    extra_candidate_regex: str | None = None,
+):
     """Re-run full keyword matching (all 49 keywords, every group) on every
     ad with >=1 match in the existing classified_data (group != 'NA') - see
-    module docstring for why this is the complete population, not a sample.
+    module docstring for why this is the complete population, not a sample
+    FOR THE EXISTING KEYWORD PATTERN SET.
+
+    `extra_candidate_regex`: needed whenever the pattern set being tested
+    includes a form that ISN'T in the live master_keywords.json patterns
+    (e.g. the bare-LLM experiment's extra `\\bllms?\\b` pattern) - group
+    != 'NA' is only a complete population with respect to patterns
+    group_classification.py actually ran. An ad whose ONLY possible match
+    is the new pattern would be 'NA' today and get silently missed without
+    this. When set, the candidate population becomes
+    (group != 'NA') OR (content_clean matches this regex, case-insensitive).
 
     Returns:
       counts: {(year, lang_bucket, kw): count}
       per_ad_matches: list of (ad_id, year, sorted matched-keyword list)
     """
     lf = pl.scan_parquet(Path(config.output_dir) / "classified_data" / "year=*" / "*.parquet")
+    candidate_mask = pl.col("group") != "NA"
+    if extra_candidate_regex:
+        candidate_mask = candidate_mask | (
+            pl.col("content_clean").str.to_lowercase().str.contains(extra_candidate_regex)
+        )
     df = (
-        lf.filter(pl.col("group") != "NA")
+        lf.filter(candidate_mask)
         .select(["ad_id", "content_clean", "detected_language", "tst_created"])
         .collect()
     )
-    print(f"  Recomputing full keyword matches for {df.height:,} ads with >=1 match...")
+    print(f"  Recomputing full keyword matches for {df.height:,} candidate ads...")
 
     counts: Counter = Counter()
     per_ad_matches: list = []
@@ -278,6 +297,12 @@ def main():
     parser.add_argument("--config", type=str, default="pipeline/config.yaml")
     parser.add_argument("--exclude-layer3", action="store_true",
                          help="Exclude source=='LLM' (Layer 3 / layer3.py-derived) keywords")
+    parser.add_argument("--include-bare-llm", action="store_true",
+                         help="EXPERIMENTAL (Jeremias, 2026-08-03): also match bare "
+                              "'LLM'/'LLMs' for the 'LLM' keyword, on top of the safe "
+                              "spelled-out 'large language models' form. Does not touch "
+                              "master_keywords.json or the live pipeline - pattern added "
+                              "here only.")
     args = parser.parse_args()
 
     config = load_config(args.config)
@@ -297,7 +322,18 @@ def main():
 
     en_patterns, local_patterns = build_keyword_patterns(master_keywords)
 
-    counts, per_ad_matches = collect_matches(config, en_patterns, local_patterns, excluded_kws)
+    extra_candidate_regex = None
+    if args.include_bare_llm:
+        llm_group = next(k["group"] for k in master_keywords if k["keyword"] == "LLM")
+        en_patterns.append(("LLM", llm_group, re.compile(r"\bllms?\b")))
+        extra_candidate_regex = r"\bllms?\b"
+        label = "bare_llm" if label == "full_pool" else f"{label}_bare_llm"
+        title_suffix += " + bare LLM experiment"
+        print("  EXPERIMENTAL: bare 'LLM'/'LLMs' pattern added for the 'LLM' keyword.")
+
+    counts, per_ad_matches = collect_matches(
+        config, en_patterns, local_patterns, excluded_kws, extra_candidate_regex
+    )
 
     print("  Classifying keywords (G1 fixed status + per-language benchmark stats)...")
     kw_stats = classify_keywords(counts, all_kws)
