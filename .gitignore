@@ -46,8 +46,8 @@ genai-adoption-pipeline/Draft_Measuring Firm-Level Adoption of Generative AI in 
 notes/
 
 # --- Handoff snapshot ---
-# for_jeremias/ is a curated copy of files to send him directly, not source -
-# tracking it here would duplicate the real files under code/ and
-# genai-adoption-pipeline/. Keyword-list backups are similarly transient.
-for_jeremias/
+# for_jeremias/ is a curated copy of files sent to Jeremias directly - pushed
+# on his request (2026-08-07) so he can pull it from GitHub. Duplicates real
+# files under code/ and genai-adoption-pipeline/, but that's intentional here.
+# Keyword-list backups are still transient/local-only.
 genai-adoption-pipeline/keyword_lists/*.bak-*

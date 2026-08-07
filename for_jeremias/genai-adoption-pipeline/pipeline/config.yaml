@@ -1,0 +1,127 @@
+# GenAI Adoption Pipeline Configuration
+# All parameters can be adjusted before each run.
+
+# --- Data Access ---
+# Path to directory containing Parquet files
+# Points at the exported x28 data (data/raw/x28_dump.duckdb -> Parquet via
+# code/mine/export_duckdb_to_parquet.py). Absolute path used deliberately —
+# this project's folder has moved once already, so a relative path tied to
+# "wherever main.py happens to be run from" is a fragile assumption.
+data_path: "C:/Users/Louis/Documents/Internship/data/processed/x28_parquet/"
+
+# Column Mapping (Abstraction for cross-dataset compatibility)
+# These map the INTERNAL abstracted name to the DATASET column name.
+column_mapping:
+  date: "tst_created"
+  content: "content_clean"
+  language: "language"  # x28's own detected-language flag on advertisements (added 2026-08-02, replaces FastText - see pipeline/language_detection.py)
+  locations: "locations"
+  job_id: "duplicate_group"  # Top-level posting dedup key (x28 field; "id" does not exist at top level)
+  company_struct: "company"
+  company_id: "id"
+  company_name: "name" # The field INSIDE the company struct
+  company_is_recruiter: "is_recruiter"
+  company_metadata: "metadata"
+  company_size_struct: "size"
+  company_size_id: "id"
+  company_size_name: "name"
+
+# --- Phase I: Filtering & Sanity Checks ---
+# C1: Date range filter for job ads. Use YYYY-MM-DD or null.
+date_range_start: null
+date_range_end: null
+
+# C2: Country filter (ISO codes).
+country_filter: "CH"
+
+# C2b: Language restriction (applied right after language detection).
+# Keep only postings whose detected language is in this list; drop the rest.
+# Default = Swiss national languages + English.
+# Note: Romansh (rm) is kept and detected, but Google Translate cannot translate
+# keywords into rm, so rm postings are scanned with the English keyword forms only.
+# Set to null (or remove the key) to disable the restriction and keep all languages.
+allowed_languages: ["de", "fr", "it", "rm", "en"]
+
+# C3: Recruiter exclusion.
+exclude_recruiters: true
+
+# C4: Micro-Enterprise exclusion (1-10 employees).
+# Disabled per Jeremias (2026-08-02): he already filters firms with 10+ ads
+# downstream on his end, making this redundant - and disabling it also fixes a
+# Polars null-comparison bug (null != x -> null -> row dropped) that was
+# silently killing postings with an UNKNOWN firm size, not just confirmed
+# micro-enterprises (worst case: Dec 2018, 128,455 raw rows -> 33 survivors).
+# See notes/jeremias_feedback_response_2026-07-30.md #7.
+exclude_micro_enterprises: false
+micro_enterprise_id: "57000001"
+
+# C5: Statistical Sanity Check (upper-tail log-normal CI per size class)
+# Different alphas per size class because larger firms have genuinely higher
+# and more variable posting volumes — they need wider bounds.
+# Alpha = probability of falsely flagging a legitimate firm (upper tail only).
+# SME (57000002):    strict  — small firms rarely post >50 ads legitimately
+# Medium (57000003): moderate
+# Large (57000004):  permissive — SBB, hospitals etc. post thousands of real ads
+sanity_alpha_sme:    0.005
+sanity_alpha_medium: 0.002
+sanity_alpha_large:  0.001
+
+# --- Phase II: Dynamic Empirical Validation (Regression) ---
+# NOT CURRENTLY USED. Decided with Jeremias 2026-07-17: the x28 dataset only
+# covers Dec 2022 - Nov 2025, so there is no pre-2022 baseline to regress
+# against, and this whole DHS-regression approach can't run on this data.
+# main.py now calls pipeline/simple_keyword_scoring.py instead of
+# keyword_scoring.py's score_postings() — every keyword in layer1/2/3 is
+# treated as an equal signal (no G1/G2/G3 tiering). Everything below this
+# point (down to "Phase III") is dead configuration under the simplified
+# flow — left in place, untouched, in case a future dataset has enough
+# history to bring the real regression back.
+#
+# Pre-period for regression: 2012 to this year (inclusive)
+# Using 2021 as 'Clean Baseline' to avoid late-2022 ChatGPT noise.
+pre_period_end_year: 2021
+
+# Validation year to check for the GenAI "Shock"
+validation_year: 2025
+
+# Ad-Level Flagging Rules ("V6 Triple-Lock")
+# Rule 1: >= 1 Group 1 keyword (Self-sufficient flag)
+# Rule 2: >= min_g2_for_rule2 G2 keywords AND ad occupation is AI-Intensive
+# Rule 3: >= min_g2g3_for_rule3 combined G2+G3 keywords (any occupation; >=1 must be G2)
+# Rule C: "Copilot" matched AND "Microsoft"/"GitHub" present in the ad text
+# genai_flag = Rule 1 OR Rule 2 OR Rule 3 OR Rule C
+min_g1_required: 1
+min_g2_for_rule2: 1
+min_g2g3_for_rule3: 3          # Rule 3: >= 3 combined (G2+G3), with >= 1 must be G2
+
+# Rule 2 occupation gate.
+#   true  = Rule 2 requires the ad's occupation to be AI-intensive (default; stricter)
+#   false = Rule 2 fires on the G2 keyword count alone, ignoring occupation (more lenient)
+enforce_occupation_filter: true
+
+# Threshold for Group 1 Ratio (Average 2012-2018 vs 2025)
+# Group assignment thresholds (DHS = Disruption-to-Historical-Slope ratio, range -2 to +2)
+# G1: zero pre-period baseline (div_by_zero) AND DHS >= 1.95  → triggers Rule 1 alone
+# G2: DHS >= 1.72 AND (zero baseline OR ratio > 11.75)       → triggers Rule 2 / Rule 3
+# G3: DHS >= 1.00 AND (zero baseline OR ratio > 20)          → helper, counts toward Rule 3 only
+# G4: everything else                                         → recorded but no flag contribution
+dhs_group1_threshold: 1.95
+dhs_group2_threshold: 1.72
+dhs_group3_threshold: 1.00
+ratio_group2_threshold: 11.8
+ratio_group3_threshold: 20.0
+g1_occupation_coverage_threshold: 0.8
+# Minimum G1 intensity an occupation must have to be included in the AI-intensive set.
+# Prevents low-density occupations from entering via the 80% coverage accumulation.
+# e.g. 0.03 = only occupations where >=3% of 2025 postings contain a G1 keyword.
+min_occupation_intensity: 0.02
+
+# --- Phase III: Adoption Metrics ---
+# Min postings per year for a firm to be included in the "Intensity Top 20" plot.
+# This filters out small-sample outliers (e.g. 1/1 = 100%).
+min_postings_for_intensity: 5
+
+adoption_threshold_ads: 1
+
+# --- Global Config ---
+output_dir: "output/"
