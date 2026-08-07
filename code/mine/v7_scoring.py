@@ -165,7 +165,7 @@ def collect_matches(
     df = (
         lf.filter(candidate_mask)
         .select(["ad_id", "content_clean", "detected_language", "tst_created"])
-        .collect()
+        .collect(streaming=True)
     )
     print(f"  Recomputing full keyword matches for {df.height:,} candidate ads...")
 

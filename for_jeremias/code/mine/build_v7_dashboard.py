@@ -609,7 +609,7 @@ def main():
     total_2025_ads = (
         pl.scan_parquet(Path(config.output_dir) / "classified_data" / "year=*" / "*.parquet")
         .filter(pl.col("tst_created").dt.year() == VALIDATION_YEAR)
-        .select(pl.len()).collect().item()
+        .select(pl.len()).collect(streaming=True).item()
     )
 
     print("Run 1/2: full keyword pool...")
