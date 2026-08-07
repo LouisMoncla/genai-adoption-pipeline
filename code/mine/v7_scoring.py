@@ -19,14 +19,16 @@ CORE IDEA: a single "multiple" statistic replaces the old DHS+ratio pair.
 
 KEY SIMPLIFICATION vs. the legacy Pass-1 (which scanned the full multi-
 million-row corpus with multiprocessing): group_classification.py's `group`
-column is "NA" if and only if ZERO of the 49 validated keywords matched an
+column is "NA" if and only if ZERO of the validated keywords matched an
 ad (classify_text() returns an empty dict only in that case). So every ad
 with group != "NA" is the COMPLETE population of ads with >=1 keyword match
-- not a sample. That's ~7,300 ads out of 6.3M, not a full-corpus scan. This
-script re-runs full keyword matching (all 49 keywords, not just the best-
-priority group group_classification.py persisted) on just that small
-population - the same approach group_strategy_analysis.py already uses -
-which is fast enough to not need multiprocessing at all.
+- not a sample. That was ~7,300 ads out of 6.3M with the original 49-keyword
+list; ~71,400 now that master_keywords.json has grown to 117 (2026-08-06) -
+still a small slice of the corpus, not a full-corpus scan. This script
+re-runs full keyword matching (every keyword, not just the best-priority
+group group_classification.py persisted) on just that small population -
+the same approach group_strategy_analysis.py already uses - which is fast
+enough to not need multiprocessing at all.
 
 LANGUAGE ATTRIBUTION CONVENTION (matches the legacy Pass-1's own choice,
 carried forward for consistency, not re-litigated by the v7 spec): a match
@@ -76,10 +78,16 @@ TREND_START_YEAR = 2016
 TREND_END_YEAR = 2020  # inclusive; 2021 explicitly excluded (GitHub Copilot
                         # preview / DALL-E / GPT-3 API all arrived that year)
 VALIDATION_YEAR = 2025
+G1_VALIDATION_YEARS = (2023, 2024, 2025)  # per Jeremias, 2026-08-06: G1's
+    # "does it exist now" check uses this 3-year window instead of 2025
+    # alone - more robust than hinging G1 status on a single year. Only
+    # affects G1; G2's y2025 >= c*B condition is unchanged, still 2025 only.
 MIN_VALIDATION_HITS_G2 = 10   # Fixed, within a single language
 MIN_VALIDATION_HITS_G1 = 1    # marked OPEN status in the spec - not finalized
 
-C_GRID = [1.05, 1.10, 1.20, 1.25, 1.50]
+C_GRID = [1.5, 3, 5, 10]  # per Jeremias, 2026-08-06 - raised from
+    # [1.05, 1.10, 1.20, 1.25, 1.50] once the per-keyword breakeven_c table
+    # showed most real discrimination happens well above the old grid's max.
 K_GRID = [1, 2, 3, 4, 5]
 
 # Keyword forms only ever exist for de/fr/it besides en (see
@@ -190,8 +198,11 @@ def classify_keywords(counts: Counter, all_kws: list[str]) -> dict:
     for kw in sorted(all_kws):
         total_pre_all_langs = sum(counts.get((y, l, kw), 0) for y in pre_years for l in LANGS)
         y2025_all_langs = sum(counts.get((VALIDATION_YEAR, l, kw), 0) for l in LANGS)
+        y_g1_window_all_langs = sum(
+            counts.get((y, l, kw), 0) for y in G1_VALIDATION_YEARS for l in LANGS
+        )
         zero_16_20 = total_pre_all_langs == 0
-        is_g1 = zero_16_20 and y2025_all_langs >= MIN_VALIDATION_HITS_G1
+        is_g1 = zero_16_20 and y_g1_window_all_langs >= MIN_VALIDATION_HITS_G1
 
         per_lang = {}
         for lang in LANGS:
@@ -206,6 +217,7 @@ def classify_keywords(counts: Counter, all_kws: list[str]) -> dict:
         result[kw] = {
             "zero_16_20": zero_16_20,
             "y2025_all_langs": y2025_all_langs,
+            "y_g1_window_all_langs": y_g1_window_all_langs,
             "is_g1": is_g1,
             "per_lang": per_lang,
         }

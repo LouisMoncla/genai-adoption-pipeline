@@ -11,7 +11,8 @@
         "de": "ChatGPT",
         "fr": "ChatGPT",
         "it": "ChatGPT"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Generative artificial intelligence",
@@ -24,7 +25,8 @@
         "de": "Generative künstliche Intelligenz",
         "fr": "Intelligence artificielle générative",
         "it": "Intelligenza artificiale generativa"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Microsoft Copilot",
@@ -37,7 +39,8 @@
         "de": "Microsoft Copilot",
         "fr": "Microsoft Copilot",
         "it": "Microsoft Copilot"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Multimodal models",
@@ -50,7 +53,8 @@
         "de": "Multimodale Modelle",
         "fr": "Modèles multimodaux",
         "it": "Modelli multimodali"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Prompt engineering",
@@ -63,7 +67,8 @@
         "de": "Prompt-Entwickler",
         "fr": "Ingénierie des prompts",
         "it": "Ingegneria dei prompt"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Retrieval augmented generation",
@@ -76,7 +81,8 @@
         "de": "Abrufgestützte Generierung",
         "fr": "Génération augmentée par récupération",
         "it": "Generazione aumentata dal recupero"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Azure OpenAI",
@@ -89,7 +95,8 @@
         "de": "Azure OpenAI",
         "fr": "Azure OpenAI",
         "it": "Azure OpenAI"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Gen AI",
@@ -102,7 +109,8 @@
         "de": "Gen KI",
         "fr": "IA générative",
         "it": "IA generativa"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Generative AI",
@@ -115,7 +123,8 @@
         "de": "Generative KI",
         "fr": "IA générative",
         "it": "IA generativa"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "LangChain",
@@ -128,7 +137,8 @@
         "de": "LangChain",
         "fr": "LangChain",
         "it": "LangChain"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Large language model",
@@ -141,7 +151,8 @@
         "de": "Großes Sprachmodell",
         "fr": "Grand modèle de langage",
         "it": "Modello linguistico di grandi dimensioni"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "LlamaIndex",
@@ -154,7 +165,8 @@
         "de": "LlamaIndex",
         "fr": "LlamaIndex",
         "it": "LlamaIndex"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Pinecone",
@@ -167,7 +179,8 @@
         "de": "Pinecone",
         "fr": "Pinecone",
         "it": "Pinecone"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Prompt design",
@@ -180,7 +193,8 @@
         "de": "Prompt-Design",
         "fr": "Conception de prompts",
         "it": "Progettazione di prompt"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "RAG",
@@ -193,7 +207,8 @@
         "de": "Abrufgestützte Generierung",
         "fr": "Génération augmentée par récupération",
         "it": "Generazione aumentata dal recupero"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Vector database",
@@ -206,7 +221,8 @@
         "de": "Vektordatenbank",
         "fr": "Base de données vectorielles",
         "it": "Banca dati vettoriale"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Weaviate",
@@ -219,7 +235,8 @@
         "de": "Weaviate",
         "fr": "Weaviate",
         "it": "Weaviate"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "AI-Driven Automation",
@@ -232,7 +249,8 @@
         "de": "KI-gesteuerte Automatisierung",
         "fr": "Automatisation basée sur l'IA",
         "it": "Automazione guidata dall'intelligenza artificiale"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Autoencoder",
@@ -245,7 +263,8 @@
         "de": "Autoencoder",
         "fr": "Autoencodeur",
         "it": "Autoencoder"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "DALL-E",
@@ -258,7 +277,8 @@
         "de": "DALL-E",
         "fr": "DALL-E",
         "it": "DALL-E"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Foundation Model",
@@ -271,7 +291,8 @@
         "de": "Basismodell",
         "fr": "Modèle de base",
         "it": "Modello di base"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "GitHub Copilot",
@@ -284,7 +305,8 @@
         "de": "GitHub Copilot",
         "fr": "GitHub Copilot",
         "it": "GitHub Copilot"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Google Gemini",
@@ -297,7 +319,8 @@
         "de": "Google Gemini",
         "fr": "Google Gemini",
         "it": "Google Gemini"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Google Vertex AI",
@@ -310,7 +333,8 @@
         "de": "Google Vertex AI",
         "fr": "Google Vertex AI",
         "it": "Google Vertex AI"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "LLMOps",
@@ -323,7 +347,8 @@
         "de": "LLMOps",
         "fr": "LLMOps",
         "it": "LLMOps"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Midjourney",
@@ -336,7 +361,8 @@
         "de": "Midjourney",
         "fr": "Midjourney",
         "it": "Midjourney"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Multimodal AI",
@@ -349,7 +375,8 @@
         "de": "Multimodale KI",
         "fr": "IA multimodale",
         "it": "IA multimodale"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "OpenAI",
@@ -362,7 +389,8 @@
         "de": "OpenAI",
         "fr": "OpenAI",
         "it": "OpenAI"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Stable Diffusion",
@@ -375,7 +403,8 @@
         "de": "Stable Diffusion",
         "fr": "Stable Diffusion",
         "it": "Stable Diffusion"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Synthesia",
@@ -388,7 +417,8 @@
         "de": "Synthesia",
         "fr": "Synthesia",
         "it": "Synthesia"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "LLM",
@@ -401,7 +431,8 @@
         "de": "Große Sprachmodelle",
         "fr": "Grands modèles de langage",
         "it": "Modelli linguistici di grandi dimensioni"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "AI Agent",
@@ -414,7 +445,8 @@
         "de": "KI-Agent",
         "fr": "Agent IA",
         "it": "Agente dell'IA"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Cohere",
@@ -427,7 +459,8 @@
         "de": "Cohere",
         "fr": "Cohere",
         "it": "Cohere"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "FAISS",
@@ -440,7 +473,8 @@
         "de": "FAISS",
         "fr": "FAISS",
         "it": "FAISS"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Hugging Face",
@@ -453,7 +487,8 @@
         "de": "Hugging Face",
         "fr": "Hugging Face",
         "it": "Hugging Face"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Responsible AI",
@@ -466,7 +501,8 @@
         "de": "Verantwortungsvolle KI",
         "fr": "IA responsable",
         "it": "IA responsabile"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "HuggingFace Transformers",
@@ -479,7 +515,8 @@
         "de": "HuggingFace Transformers",
         "fr": "HuggingFace Transformers",
         "it": "HuggingFace Transformers"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Milvus",
@@ -492,7 +529,8 @@
         "de": "Milvus",
         "fr": "Milvus",
         "it": "Milvus"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "AI Adoption",
@@ -505,7 +543,8 @@
         "de": "KI-Einführung",
         "fr": "Adoption de l'IA",
         "it": "Adozione dell'IA"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "AI Ethics",
@@ -518,7 +557,8 @@
         "de": "KI-Ethik",
         "fr": "Éthique de l'IA",
         "it": "Etica dell’intelligenza artificiale"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "AI-Powered",
@@ -531,7 +571,8 @@
         "de": "KI-betrieben",
         "fr": "Alimenté par l'IA",
         "it": "Alimentato dall'intelligenza artificiale"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Conversational AI",
@@ -544,7 +585,8 @@
         "de": "Konversations-KI",
         "fr": "IA conversationnelle",
         "it": "IA conversazionale"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Embeddings",
@@ -557,7 +599,8 @@
         "de": "Einbettungen",
         "fr": "Plongements",
         "it": "Embedding"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Explainable AI",
@@ -570,7 +613,8 @@
         "de": "Erklärbare KI",
         "fr": "IA explicable",
         "it": "IA spiegabile"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Few-Shot Learning",
@@ -583,7 +627,8 @@
         "de": "Few-Shot-Lernen",
         "fr": "Apprentissage few-shot",
         "it": "Apprendimento few-shot"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Generative Design",
@@ -596,7 +641,8 @@
         "de": "Generatives Design",
         "fr": "Conception générative",
         "it": "Progettazione generativa"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Human-in-the-Loop",
@@ -609,7 +655,8 @@
         "de": "Human-in-the-Loop",
         "fr": "Humain dans la boucle",
         "it": "Human-in-the-Loop"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "MLOps",
@@ -622,7 +669,8 @@
         "de": "MLOps",
         "fr": "MLOps",
         "it": "MLOps"
-      }
+      },
+      "validated": true
     },
     {
       "keyword": "Text-to-Image",
@@ -635,6 +683,959 @@
         "de": "Text-zu-Bild",
         "fr": "Texte en image",
         "it": "Testo in immagine"
+      },
+      "validated": true
+    },
+    {
+      "keyword": "Large language modeling",
+      "group": 1,
+      "source": "St",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Large language modeling",
+        "de": "Große Sprachmodellierung",
+        "fr": "Modélisation de grands langages",
+        "it": "Modellazione di grandi modelli linguistici"
+      }
+    },
+    {
+      "keyword": "Generative adversarial networks",
+      "group": 1,
+      "source": "St",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Generative adversarial networks",
+        "de": "Generative gegnerische Netzwerke",
+        "fr": "Réseaux adverses génératifs",
+        "it": "Reti avversarie generative"
+      }
+    },
+    {
+      "keyword": "Text to speech",
+      "group": 1,
+      "source": "St",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Text to speech",
+        "de": "Text-to-Speech",
+        "fr": "Synthèse vocale",
+        "it": "Sintesi vocale"
+      }
+    },
+    {
+      "keyword": "Variational autoencoders",
+      "group": 1,
+      "source": "St",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Variational autoencoders",
+        "de": "Variationale Autoencoder",
+        "fr": "Auto-encodeurs variationnels",
+        "it": "Codificatori automatici variazionali"
+      }
+    },
+    {
+      "keyword": "Claude",
+      "group": 2,
+      "source": "H&L",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Claude",
+        "de": "Claude",
+        "fr": "Claude",
+        "it": "Claude"
+      }
+    },
+    {
+      "keyword": "Gemini",
+      "group": 2,
+      "source": "H&L",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Gemini",
+        "de": "Gemini",
+        "fr": "Gemini",
+        "it": "Gemini"
+      }
+    },
+    {
+      "keyword": "GPT",
+      "group": 2,
+      "source": "H&L",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "GPT",
+        "de": "GPT",
+        "fr": "GPT",
+        "it": "GPT"
+      }
+    },
+    {
+      "keyword": "Transformer-based model",
+      "group": 2,
+      "source": "H&L",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Transformer-based model",
+        "de": "Transformer-basiertes Modell",
+        "fr": "Modèle basé sur Transformer",
+        "it": "Modello basato su Transformer"
+      }
+    },
+    {
+      "keyword": "OpenAI API",
+      "group": 2,
+      "source": "H&L",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "OpenAI API",
+        "de": "OpenAI API",
+        "fr": "OpenAI API",
+        "it": "OpenAI API"
+      }
+    },
+    {
+      "keyword": "Anthropic Claude API",
+      "group": 2,
+      "source": "H&L",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Anthropic Claude API",
+        "de": "Anthropic Claude API",
+        "fr": "Anthropic Claude API",
+        "it": "Anthropic Claude API"
+      }
+    },
+    {
+      "keyword": "Google Vertex AI Generative",
+      "group": 2,
+      "source": "H&L",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Google Vertex AI Generative",
+        "de": "Google Vertex AI Generative",
+        "fr": "Google Vertex AI Generative",
+        "it": "Google Vertex AI Generative"
+      }
+    },
+    {
+      "keyword": "RetrievalQA",
+      "group": 2,
+      "source": "H&L",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "RetrievalQA",
+        "de": "RetrievalQA",
+        "fr": "RetrievalQA",
+        "it": "RetrievalQA"
+      }
+    },
+    {
+      "keyword": "Transformer",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Transformer",
+        "de": "Transformer",
+        "fr": "Transformer",
+        "it": "Transformer"
+      }
+    },
+    {
+      "keyword": "Diffusion Model",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Diffusion Model",
+        "de": "Diffusionsmodell",
+        "fr": "Modèle de diffusion",
+        "it": "Modello di diffusione"
+      }
+    },
+    {
+      "keyword": "Neural Networks",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Neural Networks",
+        "de": "Neuronale Netze",
+        "fr": "Réseaux de neurones",
+        "it": "Reti neurali"
+      }
+    },
+    {
+      "keyword": "GPT-3",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "GPT-3",
+        "de": "GPT-3",
+        "fr": "GPT-3",
+        "it": "GPT-3"
+      }
+    },
+    {
+      "keyword": "GPT-4",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "GPT-4",
+        "de": "GPT-4",
+        "fr": "GPT-4",
+        "it": "GPT-4"
+      }
+    },
+    {
+      "keyword": "LLaMA",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "LLaMA",
+        "de": "LLaMA",
+        "fr": "LLaMA",
+        "it": "LLaMA"
+      }
+    },
+    {
+      "keyword": "Bard",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Bard",
+        "de": "Bard",
+        "fr": "Bard",
+        "it": "Bard"
+      }
+    },
+    {
+      "keyword": "StyleGAN",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "StyleGAN",
+        "de": "StyleGAN",
+        "fr": "StyleGAN",
+        "it": "StyleGAN"
+      }
+    },
+    {
+      "keyword": "PaLM",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "PaLM",
+        "de": "PaLM",
+        "fr": "PaLM",
+        "it": "PaLM"
+      }
+    },
+    {
+      "keyword": "OpenAI Codex",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "OpenAI Codex",
+        "de": "OpenAI Codex",
+        "fr": "OpenAI Codex",
+        "it": "OpenAI Codex"
+      }
+    },
+    {
+      "keyword": "BLOOM",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "BLOOM",
+        "de": "BLOOM",
+        "fr": "BLOOM",
+        "it": "BLOOM"
+      }
+    },
+    {
+      "keyword": "Mistral",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Mistral",
+        "de": "Mistral",
+        "fr": "Mistral",
+        "it": "Mistral"
+      }
+    },
+    {
+      "keyword": "T5",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "T5",
+        "de": "T5",
+        "fr": "T5",
+        "it": "T5"
+      }
+    },
+    {
+      "keyword": "Falcon",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Falcon",
+        "de": "Falcon",
+        "fr": "Falcon",
+        "it": "Falcon"
+      }
+    },
+    {
+      "keyword": "TensorFlow",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "TensorFlow",
+        "de": "TensorFlow",
+        "fr": "TensorFlow",
+        "it": "TensorFlow"
+      }
+    },
+    {
+      "keyword": "PyTorch",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "PyTorch",
+        "de": "PyTorch",
+        "fr": "PyTorch",
+        "it": "PyTorch"
+      }
+    },
+    {
+      "keyword": "Keras",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Keras",
+        "de": "Keras",
+        "fr": "Keras",
+        "it": "Keras"
+      }
+    },
+    {
+      "keyword": "Amazon SageMaker",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Amazon SageMaker",
+        "de": "Amazon SageMaker",
+        "fr": "Amazon SageMaker",
+        "it": "Amazon SageMaker"
+      }
+    },
+    {
+      "keyword": "Azure OpenAI Service",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Azure OpenAI Service",
+        "de": "Azure OpenAI Service",
+        "fr": "Azure OpenAI Service",
+        "it": "Azure OpenAI Service"
+      }
+    },
+    {
+      "keyword": "Prompt Engineer",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Prompt Engineer",
+        "de": "Prompt Engineer",
+        "fr": "Prompt Engineer",
+        "it": "Prompt Engineer"
+      }
+    },
+    {
+      "keyword": "Fine-Tuning",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Fine-Tuning",
+        "de": "Fine-Tuning",
+        "fr": "Fine-Tuning",
+        "it": "Fine-Tuning"
+      }
+    },
+    {
+      "keyword": "Transfer Learning",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Transfer Learning",
+        "de": "Transferlernen",
+        "fr": "Apprentissage par transfert",
+        "it": "Apprendimento per trasferimento"
+      }
+    },
+    {
+      "keyword": "Zero-Shot Learning",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Zero-Shot Learning",
+        "de": "Zero-Shot-Lernen",
+        "fr": "Apprentissage zero-shot",
+        "it": "Apprendimento zero-shot"
+      }
+    },
+    {
+      "keyword": "Reinforcement Learning",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Reinforcement Learning",
+        "de": "Verstärkungslernen",
+        "fr": "Apprentissage par renforcement",
+        "it": "Apprendimento per rinforzo"
+      }
+    },
+    {
+      "keyword": "Reinforcement Learning from Human Feedback",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Reinforcement Learning from Human Feedback",
+        "de": "Bestärkendes Lernen durch menschliches Feedback",
+        "fr": "Apprentissage par renforcement à partir de la rétroaction humaine",
+        "it": "Apprendimento per rinforzo dal feedback umano"
+      }
+    },
+    {
+      "keyword": "Self-Supervised Learning",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Self-Supervised Learning",
+        "de": "Selbstüberwachtes Lernen",
+        "fr": "Apprentissage auto-supervisé",
+        "it": "Apprendimento autosupervisionato"
+      }
+    },
+    {
+      "keyword": "Unsupervised Learning",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Unsupervised Learning",
+        "de": "Unüberwachtes Lernen",
+        "fr": "Apprentissage non supervisé",
+        "it": "Apprendimento non supervisionato"
+      }
+    },
+    {
+      "keyword": "Deep Learning",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Deep Learning",
+        "de": "Tiefes Lernen",
+        "fr": "Apprentissage profond",
+        "it": "Apprendimento profondo"
+      }
+    },
+    {
+      "keyword": "Natural Language Processing",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Natural Language Processing",
+        "de": "Verarbeitung natürlicher Sprache",
+        "fr": "Traitement du langage naturel",
+        "it": "Elaborazione del linguaggio naturale"
+      }
+    },
+    {
+      "keyword": "Natural Language Generation",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Natural Language Generation",
+        "de": "Erzeugung natürlicher Sprache",
+        "fr": "Génération de langage naturel",
+        "it": "Generazione del linguaggio naturale"
+      }
+    },
+    {
+      "keyword": "LoRA",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "LoRA",
+        "de": "LoRA",
+        "fr": "LoRA",
+        "it": "LoRA"
+      }
+    },
+    {
+      "keyword": "DreamBooth",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "DreamBooth",
+        "de": "DreamBooth",
+        "fr": "DreamBooth",
+        "it": "DreamBooth"
+      }
+    },
+    {
+      "keyword": "Chain-of-Thought",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Chain-of-Thought",
+        "de": "Gedankenkette",
+        "fr": "Chaîne de pensée",
+        "it": "Catena di pensiero"
+      }
+    },
+    {
+      "keyword": "AI Alignment",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "AI Alignment",
+        "de": "KI-Ausrichtung",
+        "fr": "Alignement de l'IA",
+        "it": "Allineamento dell'IA"
+      }
+    },
+    {
+      "keyword": "Artificial Intelligence",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Artificial Intelligence",
+        "de": "Künstliche Intelligenz",
+        "fr": "Intelligence artificielle",
+        "it": "Intelligenza artificiale"
+      }
+    },
+    {
+      "keyword": "Machine Learning",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Machine Learning",
+        "de": "Maschinelles Lernen",
+        "fr": "Apprentissage automatique",
+        "it": "Apprendimento automatico"
+      }
+    },
+    {
+      "keyword": "Chatbot",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Chatbot",
+        "de": "Chatbot",
+        "fr": "Chatbot",
+        "it": "Chatbot"
+      }
+    },
+    {
+      "keyword": "Virtual Assistant",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Virtual Assistant",
+        "de": "Virtueller Assistent",
+        "fr": "Assistant virtuel",
+        "it": "Assistente virtuale"
+      }
+    },
+    {
+      "keyword": "Intelligent Automation",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Intelligent Automation",
+        "de": "Intelligente Automatisierung",
+        "fr": "Automatisation intelligente",
+        "it": "Automazione intelligente"
+      }
+    },
+    {
+      "keyword": "Digital Transformation",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Digital Transformation",
+        "de": "Digitale Transformation",
+        "fr": "Transformation numérique",
+        "it": "Trasformazione digitale"
+      }
+    },
+    {
+      "keyword": "AI Strategy",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "AI Strategy",
+        "de": "KI-Strategie",
+        "fr": "Stratégie d'IA",
+        "it": "Strategia dell'intelligenza artificiale"
+      }
+    },
+    {
+      "keyword": "Content Generation",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Content Generation",
+        "de": "Content-Generierung",
+        "fr": "Génération de contenu",
+        "it": "Generazione di contenuti"
+      }
+    },
+    {
+      "keyword": "Synthetic Media",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Synthetic Media",
+        "de": "Synthetische Medien",
+        "fr": "Médias synthétiques",
+        "it": "Media sintetici"
+      }
+    },
+    {
+      "keyword": "Deepfake",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Deepfake",
+        "de": "Deepfake",
+        "fr": "Deepfake",
+        "it": "Deepfake"
+      }
+    },
+    {
+      "keyword": "Creative AI",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Creative AI",
+        "de": "Kreative KI",
+        "fr": "IA créative",
+        "it": "IA creativa"
+      }
+    },
+    {
+      "keyword": "Music Generation",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Music Generation",
+        "de": "Musikgenerierung",
+        "fr": "Génération de musique",
+        "it": "Generazione musicale"
+      }
+    },
+    {
+      "keyword": "AutoGPT",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "AutoGPT",
+        "de": "AutoGPT",
+        "fr": "AutoGPT",
+        "it": "AutoGPT"
+      }
+    },
+    {
+      "keyword": "Text-to-Video",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Text-to-Video",
+        "de": "Text-zu-Video",
+        "fr": "Texte vers vidéo",
+        "it": "Testo in video"
+      }
+    },
+    {
+      "keyword": "Image Generation",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Image Generation",
+        "de": "Bilderzeugung",
+        "fr": "Génération d'images",
+        "it": "Generazione di immagini"
+      }
+    },
+    {
+      "keyword": "Voice Cloning",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Voice Cloning",
+        "de": "Stimmklonen",
+        "fr": "Clonage de voix",
+        "it": "Clonazione vocale"
+      }
+    },
+    {
+      "keyword": "Generative Model",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Generative Model",
+        "de": "Generatives Modell",
+        "fr": "Modèle Génératif",
+        "it": "Modello generativo"
+      }
+    },
+    {
+      "keyword": "Artificial General Intelligence",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Artificial General Intelligence",
+        "de": "Künstliche allgemeine Intelligenz",
+        "fr": "Intelligence générale artificielle",
+        "it": "Intelligenza generale artificiale"
+      }
+    },
+    {
+      "keyword": "Augmented Intelligence",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Augmented Intelligence",
+        "de": "Erweiterte Intelligenz",
+        "fr": "Intelligence augmentée",
+        "it": "Intelligenza aumentata"
+      }
+    },
+    {
+      "keyword": "Hyperautomation",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Hyperautomation",
+        "de": "Hyperautomatisierung",
+        "fr": "Hyperautomatisation",
+        "it": "Iperautomazione"
+      }
+    },
+    {
+      "keyword": "ChatGPT Plugins",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "ChatGPT Plugins",
+        "de": "ChatGPT Plugins",
+        "fr": "ChatGPT Plugins",
+        "it": "ChatGPT Plugins"
+      }
+    },
+    {
+      "keyword": "Jasper",
+      "group": 3,
+      "source": "LLM",
+      "dhs_rate": null,
+      "avg_ratio": null,
+      "validated": false,
+      "forms": {
+        "en": "Jasper",
+        "de": "Jasper",
+        "fr": "Jasper",
+        "it": "Jasper"
       }
     }
   ]

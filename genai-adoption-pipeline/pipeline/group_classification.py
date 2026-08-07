@@ -34,8 +34,15 @@ keyword form before matching - see normalize()):
     per-character table, so it covers accented letters beyond just French/Italian.
   - Hyphens and spaces are interchangeable: both collapse to a single space, so
     "Vector Database" and "Vector-Database" become identical strings.
-  - Apostrophes and other punctuation are stripped entirely (only a-z, 0-9, and
-    single spaces remain).
+  - Apostrophes are stripped entirely (no space), so a word stays intact:
+    "Domain's" -> "domains".
+  - Every OTHER punctuation character (/, :, parens, HTML tags, a comma with
+    no trailing space, etc.) becomes a space, same as hyphens - NOT stripped
+    to nothing (fixed 2026-08-06: stripping used to glue the words on either
+    side into one token, e.g. "DevOps/MLOps" -> "devopsmlops", silently
+    breaking the word-boundary match regex for both halves - confirmed
+    losing 33.7% of true "MLOps" occurrences this way). Only a-z, 0-9, and
+    single spaces remain after this step.
 Matching is exact-phrase (word-boundary regex) on the normalized text - no fuzzy/typo
 tolerance beyond what the normalization above already buys, per Jeremias's exact spec
 (this replaced an earlier "use your judgment on fuzzy tolerance" instruction).
@@ -98,13 +105,125 @@ def normalize(text: str) -> str:
     t = unicodedata.normalize("NFKD", t)
     t = "".join(c for c in t if not unicodedata.combining(c))
     t = re.sub(r"[-\s]+", " ", t)          # hyphens/spaces interchangeable
-    t = re.sub(r"[^a-z0-9 ]", "", t)       # strip apostrophes/other punctuation
+    # BUG FIX (2026-08-06, independent audit): apostrophes and separator
+    # punctuation (/, :, parens, HTML tags, comma-with-no-trailing-space,
+    # ...) used to be treated identically - both stripped to nothing. That's
+    # right for apostrophes (keeps a single word intact: "Domain's" ->
+    # "domains", matches Jeremias's spec), but wrong for separators: deleting
+    # them GLUES two distinct words together ("DevOps/MLOps" ->
+    # "devopsmlops"), and the word-boundary match regex can no longer find
+    # either word inside the merged token - a silent false negative, not an
+    # error. Confirmed on real data: 33.7% of true "MLOps" occurrences
+    # (312/927 corpus-wide) were being missed this way, purely because of a
+    # neighboring "/", ":", ")", or HTML tag. Fix: strip apostrophes only
+    # (unchanged from spec); replace every OTHER punctuation character with
+    # a space instead of deleting it, same as hyphens already are.
+    t = re.sub(r"[’']", "", t)        # apostrophes (straight + curly): strip, no space
+    t = re.sub(r"[^a-z0-9 ]", " ", t)      # every other punctuation: space, not delete
+    t = re.sub(r"\s+", " ", t)             # collapse any spaces introduced above
     return t.strip()
 
 
 def load_master_keywords() -> list[dict]:
     data = json.loads(MASTER_KEYWORDS_PATH.read_text(encoding="utf-8"))
     return data["keywords"]
+
+
+# PLURAL HANDLING (2026-08-06, per Louis): EN and FR only - deliberately NOT
+# DE/IT. English adjectives never inflect for number and the head noun is
+# reliably the LAST word in these short technical noun phrases ("Foundation
+# Model" -> only "Model" pluralizes), so an optional trailing "s" on just the
+# last word is safe and correct. French adjectives DO agree in number with
+# their noun, and the head noun isn't always last - e.g. "Grand modele de
+# langage" (Large language model) truly pluralizes as "Grands modeles de
+# langage" (both word 1 AND word 2 take the 's'; "langage" is a "de X"
+# complement and stays invariant either way) - so FR gets a per-word rule
+# instead: every word gets an optional trailing "s" UNLESS it already ends
+# in "s", IS itself a preposition/article, or immediately follows one
+# (a prepositional complement doesn't take the head noun's plural).
+# German and Italian have no single reliable suffix rule the way EN/FR do
+# (German plurals depend on the noun's declension class - 7+ distinct
+# patterns; Italian plurals change the final VOWEL rather than adding a
+# suffix) - so instead of a blind generic rule, DE/IT get an explicit,
+# hand-verified list of additional forms per keyword (2026-08-06), built by
+# going through all 117 keywords individually and applying real German/
+# Italian grammar rather than guessing. Reliable sub-patterns used: German
+# nouns ending in -ung/-ion/-ent/-ie pluralize almost universally regular
+# (-ungen/-ionen/-enten/-ien); "Modell" -> "Modelle" appears often in this
+# list so is handled directly. Prepositional complements ("von X", "di X")
+# stay invariant regardless of the head noun's number, same principle as
+# the French "de X" handling below. Deliberately NOT covering genuine mass
+# nouns (German "Lernen"/"Intelligenz"/"-ung"-as-process-noun, Italian
+# "Intelligenza") - these don't pluralize in the sense used here, matching
+# how English "Machine Learning" or "Intelligence" don't either. Proper
+# nouns/brand names/acronyms are untouched. This is a bounded, individually-
+# checked list, not an attempt at full German/Italian morphology - anything
+# not listed here keeps the exact-phrase-only pattern.
+_DE_EXTRA_FORMS = {
+    "Vector database": ["Vektordatenbanken"],
+    "Foundation Model": ["Basismodelle"],
+    "Large language model": ["Große Sprachmodelle"],
+    "LLM": ["Großes Sprachmodell"],  # base form is already plural; add the singular
+    "Transformer-based model": ["Transformer-basierte Modelle"],
+    "Diffusion Model": ["Diffusionsmodelle"],
+    "Generative Model": ["Generative Modelle"],
+    "Multimodal models": ["Multimodales Modell"],  # base is plural; add singular
+    "Generative adversarial networks": ["Generatives gegnerisches Netzwerk"],
+    "Neural Networks": ["Neuronales Netz"],
+    "Virtual Assistant": ["Virtuelle Assistenten"],
+    "AI Adoption": ["KI-Einführungen"],
+    "Digital Transformation": ["Digitale Transformationen"],
+    "AI Strategy": ["KI-Strategien"],
+    "AI Alignment": ["KI-Ausrichtungen"],
+    "Embeddings": ["Einbettung"],  # base is plural; add singular
+    "Chain-of-Thought": ["Gedankenketten"],
+}
+_IT_EXTRA_FORMS = {
+    "Foundation Model": ["Modelli di base"],
+    "Multimodal models": ["Modello multimodale"],  # base is plural; add singular
+    "Vector database": ["Banche dati vettoriali"],
+    "Diffusion Model": ["Modelli di diffusione"],
+    "Generative Model": ["Modelli generativi"],
+    "Transformer-based model": ["Modelli basati su Transformer"],
+    "Neural Networks": ["Rete neurale"],  # base is plural; add singular
+    "Generative adversarial networks": ["Rete avversaria generativa"],  # base is plural; add singular
+    "Virtual Assistant": ["Assistenti virtuali"],
+}
+
+_FR_INVARIANT_WORDS = {
+    "de", "du", "des", "par", "pour", "avec", "en", "sur", "dans",
+    "la", "le", "les", "et", "ou", "a",
+}
+
+
+def _plural_pattern_source(normalized_text: str, lang: str) -> str:
+    """Regex source string (not yet compiled/bounded) for `normalized_text`
+    that also accepts a regular plural, for lang in ("en", "fr"); exact
+    literal escape, unchanged, for any other lang. See module comment above
+    for the reasoning and its limits (doesn't cover irregular French
+    plurals - none expected among these technical terms)."""
+    words = normalized_text.split(" ")
+    if lang == "en":
+        if not words:
+            return re.escape(normalized_text)
+        parts = [re.escape(w) for w in words[:-1]]
+        last = words[-1]
+        parts.append(re.escape(last) if last.endswith("s") else re.escape(last) + "s?")
+        return " ".join(parts)
+    if lang == "fr":
+        parts = []
+        prev = None
+        for w in words:
+            if w in _FR_INVARIANT_WORDS or prev in _FR_INVARIANT_WORDS or w.endswith("s"):
+                parts.append(re.escape(w))
+            else:
+                parts.append(re.escape(w) + "s?")
+            prev = w
+        return " ".join(parts)
+    return re.escape(normalized_text)
+
+
+_EXTRA_FORMS_BY_LANG = {"de": _DE_EXTRA_FORMS, "it": _IT_EXTRA_FORMS}
 
 
 def build_keyword_patterns(master_keywords: list[dict]):
@@ -118,13 +237,22 @@ def build_keyword_patterns(master_keywords: list[dict]):
         en_norm = normalize(forms["en"])
         if en_norm:
             en_patterns.append(
-                (kw["keyword"], kw["group"], re.compile(r"\b" + re.escape(en_norm) + r"\b"))
+                (kw["keyword"], kw["group"],
+                 re.compile(r"\b" + _plural_pattern_source(en_norm, "en") + r"\b"))
             )
         for lang in ("de", "fr", "it"):
             local_norm = normalize(forms.get(lang, ""))
             if local_norm and local_norm != en_norm:
+                # DE/IT: alternate with any hand-verified extra forms
+                # (plural/singular counterpart) for this specific keyword,
+                # instead of a single exact phrase - see _DE_EXTRA_FORMS/
+                # _IT_EXTRA_FORMS above.
+                extra = _EXTRA_FORMS_BY_LANG.get(lang, {}).get(kw["keyword"], [])
+                alts = [_plural_pattern_source(local_norm, lang)]
+                alts += [re.escape(normalize(f)) for f in extra if normalize(f)]
+                source = alts[0] if len(alts) == 1 else "(?:" + "|".join(alts) + ")"
                 local_patterns[lang].append(
-                    (kw["keyword"], kw["group"], re.compile(r"\b" + re.escape(local_norm) + r"\b"))
+                    (kw["keyword"], kw["group"], re.compile(r"\b" + source + r"\b"))
                 )
 
     return en_patterns, local_patterns

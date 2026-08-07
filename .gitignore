@@ -44,3 +44,10 @@ genai-adoption-pipeline/Draft_Measuring Firm-Level Adoption of Generative AI in 
 # Meeting prep, context files for/from Claude Code, draft questions for Jeremias -
 # not meant to be visible to him if he ever looks at this repo.
 notes/
+
+# --- Handoff snapshot ---
+# for_jeremias/ is a curated copy of files to send him directly, not source -
+# tracking it here would duplicate the real files under code/ and
+# genai-adoption-pipeline/. Keyword-list backups are similarly transient.
+for_jeremias/
+genai-adoption-pipeline/keyword_lists/*.bak-*
