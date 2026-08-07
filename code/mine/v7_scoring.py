@@ -361,7 +361,7 @@ def main():
         pl.scan_parquet(Path(config.output_dir) / "classified_data" / "year=*" / "*.parquet")
         .filter(pl.col("tst_created").dt.year() == VALIDATION_YEAR)
         .select(pl.len())
-        .collect()
+        .collect(streaming=True)
         .item()
     )
     print(f"  Total 2025 ads (denominator): {total_2025_ads:,}")
